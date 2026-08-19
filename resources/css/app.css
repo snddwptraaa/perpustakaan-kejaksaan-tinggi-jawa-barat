@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    [x-cloak] { display: none !important; }
+    :focus-visible { outline: 3px solid #D4A900; outline-offset: 3px; }
+    ::selection { background: #F4C542; color: #064E3B; }
+}
+
+@layer components {
+    .pagination-wrapper nav > div:first-child { display: none; }
+    .pagination-wrapper nav > div:last-child { display: flex; align-items: center; justify-content: space-between; }
+}

@@ -1,0 +1,34 @@
+<div>
+    <section class="relative overflow-hidden bg-kejati">
+        <div class="absolute -right-24 -top-32 h-96 w-96 rounded-full border border-kejati-gold/20"></div>
+        <div class="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full border border-kejati-gold/10"></div>
+        <div class="relative mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[1fr_0.8fr] lg:items-center lg:px-8 lg:py-24">
+            <div class="max-w-2xl text-white">
+                <p class="mb-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-kejati-gold"><span class="h-px w-8 bg-kejati-gold"></span> Akses ruang pengetahuan</p>
+                <h1 class="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">Temukan referensi. <span class="text-kejati-gold">Perluas perspektif.</span></h1>
+                <p class="mt-6 max-w-lg text-base leading-7 text-white/70 sm:text-lg">Selamat datang di Perpustakaan Kejaksaan Tinggi Jawa Barat. Isi buku tamu digital untuk menjelajahi koleksi kami.</p>
+                <div class="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-white/70"><span class="inline-flex items-center gap-2"><span class="text-kejati-gold">✓</span> Katalog terbuka untuk umum</span><span class="inline-flex items-center gap-2"><span class="text-kejati-gold">✓</span> Data tercatat dengan aman</span></div>
+            </div>
+            <div class="rounded-2xl bg-white p-6 shadow-2xl shadow-black/20 sm:p-8">
+                <div class="mb-7"><p class="text-xs font-bold uppercase tracking-[0.18em] text-kejati-gold-dark">Buku tamu digital</p><h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900">Mulai kunjungan Anda</h2><p class="mt-2 text-sm leading-6 text-slate-500">Data ini membantu kami memahami kebutuhan pengunjung.</p></div>
+                @if (session('info'))<div class="mb-5 rounded-xl border border-kejati-gold/40 bg-amber-50 px-4 py-3 text-sm text-yellow-900">{{ session('info') }}</div>@endif
+                <div wire:poll.15s class="mb-5 flex items-center gap-3 rounded-xl border border-kejati/10 bg-green-50 px-4 py-3" aria-live="polite">
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-kejati text-sm font-bold text-kejati-gold" aria-hidden="true">●</span>
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wide text-kejati-dark">Kunjungan hari ini</p>
+                        <p class="mt-0.5 text-sm text-slate-600"><span class="font-bold text-kejati">{{ number_format($todayVisitors) }}</span> orang sudah tercatat berkunjung.</p>
+                    </div>
+                </div>
+                <form wire:submit="submit" class="space-y-5">
+                    <div><label for="nama" class="mb-2 block text-sm font-semibold text-slate-700">Nama lengkap <span class="text-[#B91C1C]">*</span></label><input wire:model.live="nama" id="nama" type="text" autocomplete="name" placeholder="Contoh: Budi Santoso" class="block w-full rounded-xl border-stone-300 px-4 py-3 text-base shadow-sm focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('nama')" class="mt-2" /></div>
+                    <div><label for="instansi_unit" class="mb-2 block text-sm font-semibold text-slate-700">Instansi / unit kerja <span class="text-[#B91C1C]">*</span></label><input wire:model.live="instansi_unit" id="instansi_unit" type="text" autocomplete="organization" placeholder="Contoh: Kejati Jawa Barat" class="block w-full rounded-xl border-stone-300 px-4 py-3 text-base shadow-sm focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('instansi_unit')" class="mt-2" /></div>
+                    <div class="grid gap-5 sm:grid-cols-2"><div><label for="nip" class="mb-2 block text-sm font-semibold text-slate-700">NIP <span class="font-normal text-slate-400">(opsional)</span></label><input wire:model.live="nip" id="nip" type="text" inputmode="numeric" placeholder="Nomor induk" class="block w-full rounded-xl border-stone-300 px-4 py-3 text-base shadow-sm focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('nip')" class="mt-2" /></div><div><label for="no_hp" class="mb-2 block text-sm font-semibold text-slate-700">No. HP <span class="font-normal text-slate-400">(opsional)</span></label><input wire:model.live="no_hp" id="no_hp" type="tel" inputmode="tel" placeholder="08xx-xxxx-xxxx" class="block w-full rounded-xl border-stone-300 px-4 py-3 text-base shadow-sm focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('no_hp')" class="mt-2" /></div></div>
+                    <div><label for="keperluan" class="mb-2 block text-sm font-semibold text-slate-700">Keperluan kunjungan <span class="text-[#B91C1C]">*</span></label><select wire:model.live="keperluan" id="keperluan" class="block w-full rounded-xl border-stone-300 px-4 py-3 text-base shadow-sm focus:border-kejati focus:ring-kejati"><option value="">Pilih keperluan</option><option value="Mencari referensi">Mencari referensi</option><option value="Membaca di tempat">Membaca di tempat</option><option value="Penelitian">Penelitian</option><option value="Keperluan dinas lainnya">Keperluan dinas lainnya</option></select><x-input-error :messages="$errors->get('keperluan')" class="mt-2" /></div>
+                    <button type="submit" wire:loading.attr="disabled" class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark disabled:cursor-wait disabled:opacity-60"><span wire:loading.remove>Masuk ke katalog <span aria-hidden="true">→</span></span><span wire:loading>Menyiapkan katalog…</span></button>
+                    <p class="text-center text-xs leading-5 text-slate-400">Dengan melanjutkan, Anda menyetujui pencatatan kunjungan untuk keperluan administrasi perpustakaan.</p>
+                </form>
+            </div>
+        </div>
+    </section>
+    <section class="mx-auto max-w-7xl px-5 py-14 lg:px-8"><div class="grid gap-5 sm:grid-cols-3"><div class="rounded-2xl border border-stone-200 bg-white p-6"><p class="text-2xl text-kejati">01</p><h3 class="mt-4 font-semibold">Isi data singkat</h3><p class="mt-2 text-sm leading-6 text-slate-500">Cukup satu menit untuk mencatat kunjungan Anda.</p></div><div class="rounded-2xl border border-stone-200 bg-white p-6"><p class="text-2xl text-kejati">02</p><h3 class="mt-4 font-semibold">Jelajahi koleksi</h3><p class="mt-2 text-sm leading-6 text-slate-500">Cari buku berdasarkan judul, penulis, atau kategori.</p></div><div class="rounded-2xl border border-stone-200 bg-white p-6"><p class="text-2xl text-kejati">03</p><h3 class="mt-4 font-semibold">Tanyakan petugas</h3><p class="mt-2 text-sm leading-6 text-slate-500">Untuk meminjam, silakan datang langsung ke meja petugas.</p></div></div></section>
+</div>
