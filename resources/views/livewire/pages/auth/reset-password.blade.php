@@ -10,8 +10,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
-{
+new #[Layout('layouts.guest')] class extends Component {
     #[Locked]
     public string $token = '';
     public string $email = '';
@@ -39,9 +38,6 @@ new #[Layout('layouts.guest')] class extends Component
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
         $status = Password::reset(
             $this->only('email', 'password', 'password_confirmation', 'token'),
             function ($user) {
@@ -54,9 +50,6 @@ new #[Layout('layouts.guest')] class extends Component
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
         if ($status != Password::PASSWORD_RESET) {
             $this->addError('email', __($status));
 
@@ -69,37 +62,78 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <form wire:submit="resetPassword">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+<div
+    class="flex min-h-[calc(100vh-4.5rem)] items-center justify-center bg-gradient-to-br from-stone-50 via-emerald-50/30 to-stone-100 px-4 py-12 sm:px-6">
+    <div class="w-full max-w-md">
+        <!-- Card Container -->
+        <div class="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-xl shadow-kejati-dark/5">
+
+            <!-- Card Header with Logo -->
+            <div class="bg-gradient-to-br from-kejati-dark to-kejati px-8 pb-8 pt-10 text-center">
+                <div
+                    class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur">
+                    <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan"
+                        class="h-10 w-auto object-contain drop-shadow">
+                </div>
+                <h1 class="text-xl font-bold text-white">Buat Kata Sandi Baru</h1>
+                <p class="mt-1 text-sm text-white/70">Perpustakaan Digital Kejati Jawa Barat</p>
+            </div>
+
+            <!-- Card Body: Form -->
+            <div class="px-8 py-8">
+                <form wire:submit="resetPassword" class="space-y-5">
+                    <!-- Email Address -->
+                    <div>
+                        <label for="email" class="block text-sm font-semibold text-slate-700">Email Akun</label>
+                        <input wire:model="email" id="email" type="email" name="email" required autofocus
+                            autocomplete="username"
+                            class="mt-1.5 block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati" />
+                        <x-input-error :messages="$errors->get('email')" class="mt-1.5" />
+                    </div>
+
+                    <!-- Password -->
+                    <div>
+                        <label for="password" class="block text-sm font-semibold text-slate-700">Kata Sandi Baru</label>
+                        <input wire:model="password" id="password" type="password" name="password" required
+                            autocomplete="new-password" placeholder="••••••••"
+                            class="mt-1.5 block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati" />
+                        <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div>
+                        <label for="password_confirmation" class="block text-sm font-semibold text-slate-700">Konfirmasi
+                            Kata Sandi Baru</label>
+                        <input wire:model="password_confirmation" id="password_confirmation" type="password"
+                            name="password_confirmation" required autocomplete="new-password" placeholder="••••••••"
+                            class="mt-1.5 block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati" />
+                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-1.5" />
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-3.5 text-sm font-bold text-white shadow-md transition duration-200 hover:bg-kejati-dark hover:shadow-lg disabled:cursor-wait disabled:opacity-75">
+                        <!-- Loading spinner -->
+                        <svg wire:loading wire:target="resetPassword" class="h-4 w-4 shrink-0 animate-spin text-white"
+                            viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                            </circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+
+                        <!-- Button label -->
+                        <span wire:loading.remove wire:target="resetPassword">Simpan Kata Sandi Baru</span>
+                        <span wire:loading wire:target="resetPassword">Memproses…</span>
+
+                        <!-- Arrow icon -->
+                        <svg wire:loading.remove wire:target="resetPassword" class="h-4 w-4 shrink-0" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                          type="password"
-                          name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
+    </div>
 </div>

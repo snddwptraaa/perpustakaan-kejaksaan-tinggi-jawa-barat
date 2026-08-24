@@ -9,5 +9,5 @@ class Visitor extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama', 'nip', 'instansi_unit', 'no_hp', 'keperluan'];
+    protected $fillable = ['kategori', 'nama', 'nip', 'instansi_unit', 'no_hp', 'keperluan'];
 }

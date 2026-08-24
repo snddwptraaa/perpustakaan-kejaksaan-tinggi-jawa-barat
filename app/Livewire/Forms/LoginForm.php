@@ -30,14 +30,21 @@ class LoginForm extends Form
     {
         $this->ensureIsNotRateLimited();
 
-        $credentials = $this->only(['email', 'password']);
-        $credentials['role'] = ['admin', 'superadmin'];
-
-        if (! Auth::attempt($credentials, $this->remember)) {
+        if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'form.email' => trans('auth.failed'),
+            ]);
+        }
+
+        $user = Auth::user();
+        if (! $user || ! $user->isAdmin()) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'form.email' => 'Akun Anda tidak memiliki hak akses ke panel admin.',
             ]);
         }
 

@@ -1,1 +1,269 @@
-<div><div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Akses sistem</p><h1 class="mt-2 text-3xl font-semibold tracking-tight">Pengguna admin</h1><p class="mt-2 text-sm text-slate-500">Kelola akun petugas yang dapat mengakses panel.</p></div><button wire:click="$set('showForm', true)" class="inline-flex items-center justify-center gap-2 rounded-xl bg-kejati px-4 py-3 text-sm font-bold text-white hover:bg-kejati-dark"><span class="text-lg">+</span> Tambah pengguna</button></div>@if (session('success'))<div class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{{ session('success') }}</div>@endif@if (session('error'))<div class="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">{{ session('error') }}</div>@endif@if ($showForm)<div class="mt-8 max-w-xl rounded-2xl border border-kejati-gold/50 bg-amber-50 p-6 shadow-sm"><div class="flex items-center justify-between"><h2 class="text-lg font-semibold">Tambah pengguna</h2><button wire:click="$set('showForm', false)" class="text-sm text-slate-500 hover:underline">Batal</button></div><form wire:submit="save" class="mt-5 space-y-4"><div><label class="mb-2 block text-sm font-semibold">Nama</label><input wire:model="name" type="text" class="w-full rounded-xl border-stone-300 focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('name')" class="mt-2" /></div><div><label class="mb-2 block text-sm font-semibold">Email</label><input wire:model="email" type="email" class="w-full rounded-xl border-stone-300 focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('email')" class="mt-2" /></div><div><label class="mb-2 block text-sm font-semibold">Kata sandi</label><input wire:model="password" type="password" class="w-full rounded-xl border-stone-300 focus:border-kejati focus:ring-kejati"><x-input-error :messages="$errors->get('password')" class="mt-2" /></div><div><label class="mb-2 block text-sm font-semibold">Peran</label><select wire:model="role" class="w-full rounded-xl border-stone-300 focus:border-kejati focus:ring-kejati"><option value="admin">Admin / Petugas</option><option value="superadmin">Superadmin</option></select></div><button class="rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white hover:bg-kejati-dark">Simpan pengguna</button></form></div>@endif<div class="mt-8 rounded-2xl border border-stone-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-stone-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="px-6 py-4 font-semibold">Pengguna</th><th class="px-6 py-4 font-semibold">Peran</th><th class="px-6 py-4 font-semibold">Bergabung</th><th class="px-6 py-4 text-right font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-stone-100">@foreach ($users as $user)<tr class="hover:bg-stone-50"><td class="px-6 py-4"><p class="font-semibold">{{ $user->name }}</p><p class="mt-1 text-xs text-slate-500">{{ $user->email }}</p></td><td class="px-6 py-4"><span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-yellow-900">{{ ucfirst($user->role) }}</span></td><td class="px-6 py-4 text-slate-500">{{ $user->created_at->format('d M Y') }}</td><td class="px-6 py-4 text-right">@if ($user->id !== auth()->id())<button wire:click="delete({{ $user->id }})" wire:confirm="Hapus akun ini?" class="font-semibold text-red-600 hover:underline">Hapus</button>@else<span class="text-xs text-slate-400">Akun Anda</span>@endif</td></tr>@endforeach</tbody></table></div><div class="border-t border-stone-100 px-6 py-4">{{ $users->links() }}</div></div></div>
+<div class="space-y-6">
+    <!-- Top Action Bar -->
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center rounded-md bg-kejati/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-kejati">
+                    Akses Sistem & Keamanan
+                </span>
+            </div>
+            <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Pengguna Admin</h1>
+            <p class="mt-1 text-sm text-slate-500">Kelola akun petugas dan hak akses untuk panel administrasi perpustakaan.</p>
+        </div>
+        <div>
+            <button wire:click="create"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition-all duration-150 hover:bg-kejati-dark hover:shadow-kejati/30 focus:outline-none focus:ring-2 focus:ring-kejati focus:ring-offset-2 active:scale-95">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Tambah Pengguna Baru</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Notifications -->
+    @if (session('success'))
+        <div class="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3.5 text-sm font-medium text-emerald-800 shadow-sm">
+            <svg class="h-5 w-5 shrink-0 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>{{ session('success') }}</p>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm font-medium text-rose-800 shadow-sm">
+            <svg class="h-5 w-5 shrink-0 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p>{{ session('error') }}</p>
+        </div>
+    @endif
+
+    <!-- Users Data Table Card -->
+    <div class="rounded-2xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+        <!-- Search & Info Bar -->
+        <div class="border-b border-stone-100 p-4 sm:p-5">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="relative max-w-md flex-1">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input wire:model.live.debounce.300ms="search"
+                        type="search"
+                        placeholder="Cari nama atau email petugas..."
+                        class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                </div>
+                <div class="text-xs font-medium text-slate-500">
+                    Total: <span class="font-bold text-slate-800">{{ $users->total() }}</span> pengguna terdaftar
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-stone-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <tr>
+                        <th class="px-6 py-3.5">Petugas / Pengguna</th>
+                        <th class="px-6 py-3.5">Peran & Hak Akses</th>
+                        <th class="px-6 py-3.5">Bergabung</th>
+                        <th class="px-6 py-3.5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    @forelse ($users as $user)
+                        <tr class="transition hover:bg-stone-50/70">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-kejati/10 text-kejati font-bold text-sm">
+                                        {{ mb_substr($user->name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-bold text-slate-900">{{ $user->name }}</p>
+                                            @if ($user->id === auth()->id())
+                                                <span class="inline-flex items-center rounded-md bg-stone-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+                                                    Anda
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-0.5">{{ $user->email }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if ($user->role === 'superadmin')
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-900">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                                        Superadmin
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                        Admin Petugas
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-slate-500 text-xs">
+                                {{ $user->created_at->format('d M Y') }}
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                @if ($user->id !== auth()->id())
+                                    <button type="button"
+                                        @click="$dispatch('open-confirm-modal', {
+                                            title: 'Hapus Pengguna Admin',
+                                            message: 'Apakah Anda yakin ingin menghapus akun admin \'{{ addslashes($user->name) }}\' ({{ addslashes($user->email) }})?',
+                                            confirmButtonText: 'Ya, Hapus Akun',
+                                            type: 'danger',
+                                            onConfirm: () => $wire.delete({{ $user->id }})
+                                        })"
+                                        class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-rose-600 transition hover:bg-rose-50 focus:outline-none">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Hapus
+                                    </button>
+                                @else
+                                    <span class="text-xs text-slate-400 italic">Akun aktif</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="px-6 py-14 text-center">
+                                <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-slate-400">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <p class="mt-3 font-semibold text-slate-800">Tidak ada pengguna ditemukan</p>
+                                <p class="mt-1 text-xs text-slate-500">
+                                    {{ $search ? 'Tidak ada hasil untuk pencarian kata kunci tersebut.' : 'Silakan tambahkan akun pengguna admin baru.' }}
+                                </p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if ($users->hasPages())
+            <div class="border-t border-stone-100 px-6 py-4">
+                {{ $users->links() }}
+            </div>
+        @endif
+    </div>
+
+    <!-- MODAL POPUP FORM TAMBAH PENGGUNA (CARD MODAL) -->
+    @if ($showForm)
+        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-user-title" role="dialog" aria-modal="true">
+            <!-- Background Backdrop with Blur -->
+            <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+                wire:click="resetForm"></div>
+
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+                <!-- Modal Card Container -->
+                <div class="relative w-full max-w-lg transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all border border-stone-200/80 my-8">
+                    
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-kejati-dark to-kejati px-6 py-5 text-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="inline-flex items-center rounded-md bg-kejati-gold/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-kejati-gold">
+                                    Akun Baru
+                                </span>
+                                <h3 class="mt-1.5 text-xl font-bold text-white" id="modal-user-title">
+                                    Tambah Pengguna Admin
+                                </h3>
+                                <p class="text-xs text-white/80 mt-0.5">
+                                    Buat kredensial akun baru untuk petugas perpustakaan.
+                                </p>
+                            </div>
+                            <button wire:click="resetForm"
+                                type="button"
+                                class="rounded-xl bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition focus:outline-none"
+                                aria-label="Tutup form">
+                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form Body -->
+                    <form wire:submit="save">
+                        <div class="p-6 space-y-4">
+                            <!-- Nama -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Nama Lengkap <span class="text-rose-600">*</span>
+                                </label>
+                                <input wire:model="name"
+                                    type="text"
+                                    placeholder="Contoh: Ahmad Fauzi, S.H."
+                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
+                                <x-input-error :messages="$errors->get('name')" class="mt-1.5" />
+                            </div>
+
+                            <!-- Email -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Alamat Email <span class="text-rose-600">*</span>
+                                </label>
+                                <input wire:model="email"
+                                    type="email"
+                                    placeholder="Contoh: ahmad.fauzi@kejati-jabar.go.id"
+                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
+                                <x-input-error :messages="$errors->get('email')" class="mt-1.5" />
+                            </div>
+
+                            <!-- Password -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Kata Sandi (Password) <span class="text-rose-600">*</span>
+                                </label>
+                                <input wire:model="password"
+                                    type="password"
+                                    placeholder="Minimal 8 karakter"
+                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
+                                <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
+                            </div>
+
+                            <!-- Peran -->
+                            <div>
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Peran & Hak Akses <span class="text-rose-600">*</span>
+                                </label>
+                                <select wire:model="role"
+                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm">
+                                    <option value="admin">Petugas Admin (Sirkulasi, Katalog, Pengunjung)</option>
+                                    <option value="superadmin">Superadmin (Akses Penuh Seluruh Sistem)</option>
+                                </select>
+                                <x-input-error :messages="$errors->get('role')" class="mt-1.5" />
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="border-t border-stone-200 bg-stone-50 px-6 py-4 flex items-center justify-end gap-3 rounded-b-3xl">
+                            <button type="button"
+                                wire:click="resetForm"
+                                class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 focus:outline-none">
+                                Batal
+                            </button>
+                            <button type="submit"
+                                wire:loading.attr="disabled"
+                                class="inline-flex items-center gap-2 rounded-xl bg-kejati px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark focus:outline-none disabled:opacity-50">
+                                <span wire:loading wire:target="save" class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                                <span>Simpan Pengguna</span>
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    @endif
+</div>

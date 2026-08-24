@@ -14,16 +14,35 @@ class CategoryManager extends Component
     public bool $showForm = false;
     public ?int $editingId = null;
     public string $nama_kategori = '';
+    public string $search = '';
 
     protected function rules(): array
     {
-        return ['nama_kategori' => ['required', 'string', 'max:100', 'unique:categories,nama_kategori,' . $this->editingId]];
+        return [
+            'nama_kategori' => ['required', 'string', 'max:100', 'unique:categories,nama_kategori,' . $this->editingId],
+        ];
     }
 
-    public function create(): void { $this->resetForm(); $this->showForm = true; }
+    protected $messages = [
+        'nama_kategori.required' => 'Nama bidang/kategori wajib diisi.',
+        'nama_kategori.unique' => 'Nama kategori ini sudah ada.',
+        'nama_kategori.max' => 'Nama kategori maksimal 100 karakter.',
+    ];
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function create(): void
+    {
+        $this->resetForm();
+        $this->showForm = true;
+    }
 
     public function edit(Category $category): void
     {
+        $this->resetForm();
         $this->editingId = $category->id;
         $this->nama_kategori = $category->nama_kategori;
         $this->showForm = true;
@@ -33,23 +52,45 @@ class CategoryManager extends Component
     {
         $data = $this->validate();
         $data['slug'] = Str::slug($data['nama_kategori']);
-        $this->editingId ? Category::findOrFail($this->editingId)->update($data) : Category::create($data);
-        session()->flash('success', $this->editingId ? 'Kategori berhasil diperbarui.' : 'Kategori berhasil ditambahkan.');
+
+        if ($this->editingId) {
+            Category::findOrFail($this->editingId)->update($data);
+            session()->flash('success', 'Kategori buku berhasil diperbarui.');
+        } else {
+            Category::create($data);
+            session()->flash('success', 'Kategori buku baru berhasil ditambahkan.');
+        }
+
         $this->resetForm();
     }
 
     public function delete(int $id): void
     {
         $category = Category::withCount('books')->findOrFail($id);
-        if ($category->books_count) { session()->flash('error', 'Kategori tidak dapat dihapus karena masih digunakan oleh buku.'); return; }
+        
+        if ($category->books_count > 0) {
+            session()->flash('error', "Kategori '{$category->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$category->books_count} buku.");
+            return;
+        }
+
         $category->delete();
         session()->flash('success', 'Kategori berhasil dihapus.');
     }
 
-    public function resetForm(): void { $this->reset(['showForm', 'editingId', 'nama_kategori']); $this->resetValidation(); }
+    public function resetForm(): void
+    {
+        $this->reset(['showForm', 'editingId', 'nama_kategori']);
+        $this->resetValidation();
+    }
 
     public function render()
     {
-        return view('livewire.admin.category-manager', ['categories' => Category::withCount('books')->orderBy('nama_kategori')->paginate(10)])->layout('layouts.admin', ['title' => 'Kategori']);
+        return view('livewire.admin.category-manager', [
+            'categories' => Category::withCount('books')
+                ->when($this->search, fn ($q) => $q->where('nama_kategori', 'like', "%{$this->search}%"))
+                ->orderBy('nama_kategori')
+                ->paginate(10),
+        ])->layout('layouts.admin', ['title' => 'Kategori Buku']);
     }
 }
+

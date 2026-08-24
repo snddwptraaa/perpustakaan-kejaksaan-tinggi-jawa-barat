@@ -13,7 +13,7 @@ class Book extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category_id', 'judul', 'penulis', 'penerbit', 'tahun_terbit', 'isbn',
+        'category_id', 'judul', 'penulis', 'penerbit', 'tahun_terbit', 'jumlah_halaman', 'isbn',
         'no_klasifikasi', 'lokasi_rak', 'stok', 'stok_tersedia', 'cover_image', 'deskripsi',
     ];
 

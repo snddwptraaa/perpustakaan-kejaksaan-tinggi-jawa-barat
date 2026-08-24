@@ -16,6 +16,7 @@ class LoanManager extends Component
     public bool $showForm = false;
     public string $search = '';
     public string $book_id = '';
+    public string $bookSearch = '';
     public string $nama_peminjam = '';
     public string $nip_peminjam = '';
     public string $instansi_unit = '';
@@ -43,6 +44,24 @@ class LoanManager extends Component
         $this->tanggal_pinjam = now()->toDateString();
         $this->tanggal_jatuh_tempo = now()->addDays(7)->toDateString();
         $this->showForm = true;
+    }
+
+    public function selectBook(int $id): void
+    {
+        $book = Book::find($id);
+        if ($book && $book->stok_tersedia > 0) {
+            $this->book_id = (string) $id;
+            $this->bookSearch = '';
+            $this->resetValidation('book_id');
+        } else {
+            $this->addError('book_id', 'Buku ini sedang tidak tersedia untuk dipinjam.');
+        }
+    }
+
+    public function deselectBook(): void
+    {
+        $this->book_id = '';
+        $this->bookSearch = '';
     }
 
     public function updatedTanggalPinjam(): void
@@ -75,7 +94,21 @@ class LoanManager extends Component
         session()->flash('success', 'Pengembalian buku berhasil dicatat.');
     }
 
-    public function resetForm(): void { $this->reset(['showForm', 'book_id', 'nama_peminjam', 'nip_peminjam', 'instansi_unit', 'tanggal_pinjam', 'tanggal_jatuh_tempo', 'catatan']); $this->resetValidation(); }
+    public function resetForm(): void
+    {
+        $this->reset([
+            'showForm',
+            'book_id',
+            'bookSearch',
+            'nama_peminjam',
+            'nip_peminjam',
+            'instansi_unit',
+            'tanggal_pinjam',
+            'tanggal_jatuh_tempo',
+            'catatan'
+        ]);
+        $this->resetValidation();
+    }
 
     public function exportCsv(): StreamedResponse
     {
@@ -127,7 +160,34 @@ class LoanManager extends Component
     public function render()
     {
         $loans = $this->filteredLoansQuery()->with(['book', 'petugas'])->latest()->paginate(10);
-        $loans->getCollection()->each(function (Loan $loan): void { if ($loan->current_status !== $loan->status && ! $loan->tanggal_kembali) $loan->status = $loan->current_status; });
-        return view('livewire.admin.loan-manager', ['loans' => $loans, 'books' => Book::where('stok_tersedia', '>', 0)->orderBy('judul')->get()])->layout('layouts.admin', ['title' => 'Peminjaman']);
+        $loans->getCollection()->each(function (Loan $loan): void {
+            if ($loan->current_status !== $loan->status && ! $loan->tanggal_kembali) {
+                $loan->status = $loan->current_status;
+            }
+        });
+
+        $selectedBook = $this->book_id ? Book::with('category')->find($this->book_id) : null;
+
+        $search = trim($this->bookSearch);
+        $availableBooks = $search !== ''
+            ? Book::with('category')
+                ->where('stok_tersedia', '>', 0)
+                ->where(function ($query) use ($search) {
+                    $query->where('judul', 'like', "%{$search}%")
+                        ->orWhere('penulis', 'like', "%{$search}%")
+                        ->orWhere('no_klasifikasi', 'like', "%{$search}%")
+                        ->orWhere('isbn', 'like', "%{$search}%")
+                        ->orWhere('lokasi_rak', 'like', "%{$search}%");
+                })
+                ->latest()
+                ->take(8)
+                ->get()
+            : collect();
+
+        return view('livewire.admin.loan-manager', [
+            'loans' => $loans,
+            'availableBooks' => $availableBooks,
+            'selectedBook' => $selectedBook,
+        ])->layout('layouts.admin', ['title' => 'Peminjaman']);
     }
 }
