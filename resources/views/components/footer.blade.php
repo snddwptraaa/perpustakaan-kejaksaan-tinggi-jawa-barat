@@ -68,7 +68,7 @@
                         <span>Hallo-Kejati (022) 4230758</span>
                     </a>
 
-                    <a href="https://wa.me/62811223400" target="_blank"
+                    <a href="https://wa.me/62811223400" target="_blank" rel="noopener noreferrer"
                         class="group flex items-center gap-2.5 text-slate-300 transition hover:text-kejati-gold">
                         <span
                             class="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-kejati-gold transition group-hover:bg-kejati-gold group-hover:text-kejati-dark">
@@ -83,7 +83,7 @@
                     <!-- Social Icons -->
                     <div class="pt-2">
                         <div class="flex items-center gap-2">
-                            <a href="https://www.instagram.com/kejati_jabar/?hl=en" target="_blank"
+                            <a href="https://www.instagram.com/kejati_jabar/?hl=en" target="_blank" rel="noopener noreferrer"
                                 aria-label="Instagram"
                                 class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-slate-300 transition hover:bg-kejati-gold hover:text-kejati-dark">
                                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -91,14 +91,14 @@
                                         d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                                 </svg>
                             </a>
-                            <a href="https://x.com/kejati_jabar" target="_blank" aria-label="X / Twitter"
+                            <a href="https://x.com/kejati_jabar" target="_blank" rel="noopener noreferrer" aria-label="X / Twitter"
                                 class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-slate-300 transition hover:bg-kejati-gold hover:text-kejati-dark">
                                 <svg class="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
                                     <path
                                         d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
                                 </svg>
                             </a>
-                            <a href="https://www.facebook.com/KejaksaanTinggiJawaBarat" target="_blank"
+                            <a href="https://www.facebook.com/KejaksaanTinggiJawaBarat" target="_blank" rel="noopener noreferrer"
                                 aria-label="Facebook"
                                 class="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-slate-300 transition hover:bg-kejati-gold hover:text-kejati-dark">
                                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -117,18 +117,14 @@
 
                 <div
                     class="group relative overflow-hidden rounded-xl border border-white/20 bg-black/20 p-1 shadow-lg transition hover:border-kejati-gold/50">
-                    <!-- Map Thumbnail Graphic -->
-                    <div class="relative h-28 w-full overflow-hidden rounded-lg bg-emerald-950/60">
-                        <iframe title="Lokasi Kejaksaan Tinggi Jawa Barat"
-                            src="https://maps.google.com/maps?q=-6.9061837,107.6194662&t=&z=16&ie=UTF8&iwloc=&output=embed"
-                            class="h-full w-full border-0 opacity-75 grayscale contrast-125 transition duration-300 group-hover:opacity-100 group-hover:grayscale-0"
-                            loading="lazy">
-                        </iframe>
-                        <div
-                            class="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent">
+                    <div class="relative flex h-28 w-full items-center justify-center overflow-hidden rounded-lg bg-emerald-950/60 p-4 text-center">
+                        <div>
+                            <svg class="mx-auto h-7 w-7 text-kejati-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21s7-4.35 7-11a7 7 0 10-14 0c0 6.65 7 11 7 11z" />
+                                <circle cx="12" cy="10" r="2.5" />
+                            </svg>
+                            <p class="mt-2 text-[11px] leading-4 text-slate-200">Jl. L. R. E. Martadinata No. 54, Bandung</p>
                         </div>
-
-                        <!-- Map Badge -->
                         <a href="https://maps.app.goo.gl/ahV3PSf3aN3WKvhV7" target="_blank" rel="noopener noreferrer"
                             class="absolute left-2 top-2 rounded bg-slate-950/90 px-2 py-1 text-[10px] font-semibold text-white shadow backdrop-blur transition hover:bg-kejati-gold hover:text-kejati-dark">
                             Maps ↗

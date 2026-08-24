@@ -79,7 +79,7 @@
                     </div>
 
                     <!-- Statistik Hari Ini -->
-                    <div wire:poll.15s class="mt-4 flex items-center justify-between rounded-xl border border-kejati/15 bg-emerald-50/70 px-4 py-2.5" aria-live="polite">
+                    <div wire:poll.60s class="mt-4 flex items-center justify-between rounded-xl border border-kejati/15 bg-emerald-50/70 px-4 py-2.5" aria-live="polite">
                         <div class="flex items-center gap-2.5">
                             <span class="flex h-2.5 w-2.5 rounded-full bg-kejati animate-pulse" aria-hidden="true"></span>
                             <span class="text-xs font-semibold text-kejati-dark">Kunjungan Hari Ini:</span>
@@ -154,7 +154,7 @@
                                 Nama Lengkap {{ $kategori === 'pegawai' ? '& Gelar' : '' }} <span class="text-rose-600">*</span>
                             </label>
                             <input 
-                                wire:model.live="nama" 
+                                wire:model.blur="nama"
                                 id="nama" 
                                 type="text" 
                                 autocomplete="name" 
@@ -173,7 +173,7 @@
                                     <span class="text-[11px] font-bold text-kejati uppercase tracking-wider">Wajib Pegawai</span>
                                 </div>
                                 <input 
-                                    wire:model.live="nip" 
+                                    wire:model.blur="nip"
                                     id="nip" 
                                     type="text" 
                                     inputmode="numeric" 
@@ -196,7 +196,7 @@
 
                             @if ($kategori === 'pegawai')
                                 <select 
-                                    wire:model.live="instansi_unit" 
+                                    wire:model.blur="instansi_unit"
                                     id="instansi_unit" 
                                     class="block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 sm:py-3 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati">
                                     <option value="">-- Pilih Unit Kerja / Bidang --</option>
@@ -213,7 +213,7 @@
                                 </select>
                             @else
                                 <input 
-                                    wire:model.live="instansi_unit" 
+                                    wire:model.blur="instansi_unit"
                                     id="instansi_unit" 
                                     type="text" 
                                     autocomplete="organization" 
@@ -233,9 +233,10 @@
                                 @endif
                             </label>
                             <input 
-                                wire:model.live="no_hp" 
+                                wire:model.blur="no_hp"
                                 id="no_hp" 
                                 type="text" 
+                                autocomplete="tel"
                                 placeholder="{{ $kategori === 'pegawai' ? '0812-xxxx-xxxx' : '0812-xxxx-xxxx atau email@domain.com' }}" 
                                 class="block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 sm:py-3 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati">
                             <x-input-error :messages="$errors->get('no_hp')" class="mt-1.5" />
@@ -248,7 +249,7 @@
                             </label>
                             
                             <select 
-                                wire:model.live="keperluan" 
+                                wire:model.blur="keperluan"
                                 id="keperluan" 
                                 class="block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 sm:py-3 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati">
                                 <option value="">-- Pilih Keperluan Kunjungan --</option>
@@ -268,6 +269,15 @@
                                 @endif
                             </select>
                             <x-input-error :messages="$errors->get('keperluan')" class="mt-1.5" />
+                        </div>
+
+                        <div class="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                            <label for="accepted_privacy" class="flex cursor-pointer items-start gap-3 text-xs leading-5 text-slate-600">
+                                <input id="accepted_privacy" type="checkbox" wire:model="accepted_privacy"
+                                    class="mt-0.5 rounded border-stone-300 text-kejati focus:ring-kejati">
+                                <span>Saya memahami bahwa data di atas digunakan untuk administrasi, keamanan, dan statistik kunjungan perpustakaan. Data tidak digunakan untuk pemasaran.</span>
+                            </label>
+                            <x-input-error :messages="$errors->get('accepted_privacy')" class="mt-2" />
                         </div>
 
                         <!-- SUBMIT BUTTON -->
@@ -293,8 +303,8 @@
                             </button>
                         </div>
 
-                        <p class="text-center text-[11px] leading-relaxed text-slate-400">
-                            Dengan mengisi buku tamu, Anda terdaftar sebagai pengunjung resmi Perpustakaan Kejaksaan Tinggi Jawa Barat.
+                        <p class="text-center text-[11px] leading-relaxed text-slate-500">
+                            Hubungi petugas perpustakaan untuk pertanyaan, koreksi, atau penghapusan data kunjungan Anda.
                         </p>
                     </form>
                 </div>

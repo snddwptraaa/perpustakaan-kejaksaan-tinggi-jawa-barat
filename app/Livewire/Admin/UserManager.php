@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Actions\DeleteUser;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Component;
@@ -12,10 +13,15 @@ class UserManager extends Component
     use WithPagination;
 
     public bool $showForm = false;
+
     public string $search = '';
+
     public string $name = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $role = 'admin';
 
     protected function rules(): array
@@ -50,13 +56,16 @@ class UserManager extends Component
         $this->resetForm();
     }
 
-    public function delete(int $id): void
+    public function delete(int $id, DeleteUser $deleteUser): void
     {
-        if ($id === auth()->id()) {
-            session()->flash('error', 'Akun yang sedang digunakan tidak dapat dihapus.');
+        $error = $deleteUser->handle($id, auth()->id());
+
+        if ($error) {
+            session()->flash('error', $error);
+
             return;
         }
-        User::findOrFail($id)->delete();
+
         session()->flash('success', 'Akun petugas berhasil dihapus.');
     }
 
@@ -82,4 +91,3 @@ class UserManager extends Component
         ])->layout('layouts.admin', ['title' => 'Pengguna Admin']);
     }
 }
-

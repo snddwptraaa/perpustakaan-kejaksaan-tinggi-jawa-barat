@@ -4,25 +4,38 @@ namespace App\Livewire\Admin;
 
 use App\Models\Book;
 use App\Models\Loan;
+use App\Support\Csv;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class LoanManager extends Component
 {
     use WithPagination;
 
     public bool $showForm = false;
+
     public string $search = '';
+
     public string $book_id = '';
+
     public string $bookSearch = '';
+
     public string $nama_peminjam = '';
+
     public string $nip_peminjam = '';
+
     public string $instansi_unit = '';
+
     public string $tanggal_pinjam = '';
+
     public string $tanggal_jatuh_tempo = '';
+
     public string $catatan = '';
+
     public string $statusFilter = '';
 
     protected function rules(): array
@@ -66,7 +79,9 @@ class LoanManager extends Component
 
     public function updatedTanggalPinjam(): void
     {
-        if ($this->tanggal_pinjam) $this->tanggal_jatuh_tempo = \Carbon\Carbon::parse($this->tanggal_pinjam)->addDays(7)->toDateString();
+        if ($this->tanggal_pinjam) {
+            $this->tanggal_jatuh_tempo = Carbon::parse($this->tanggal_pinjam)->addDays(7)->toDateString();
+        }
     }
 
     public function save(): void
@@ -74,10 +89,15 @@ class LoanManager extends Component
         $data = $this->validate();
         DB::transaction(function () use ($data): void {
             $book = Book::whereKey($data['book_id'])->lockForUpdate()->firstOrFail();
-            if ($book->stok_tersedia < 1) $this->addError('book_id', 'Buku sedang tidak tersedia untuk dipinjam.');
-            if ($this->getErrorBag()->has('book_id')) throw new \RuntimeException('Buku tidak tersedia.');
-            Loan::create([...$data, 'petugas_id' => auth()->id(), 'status' => 'dipinjam']);
-            $book->decrement('stok_tersedia');
+            if ($book->stok_tersedia < 1) {
+                throw ValidationException::withMessages([
+                    'book_id' => 'Buku sedang tidak tersedia untuk dipinjam.',
+                ]);
+            }
+
+            Loan::create([...$data, 'petugas_id' => auth()->id()]);
+            $book->stok_tersedia--;
+            $book->save();
         });
         session()->flash('success', 'Peminjaman berhasil dicatat.');
         $this->resetForm();
@@ -85,12 +105,31 @@ class LoanManager extends Component
 
     public function returnBook(int $id): void
     {
-        DB::transaction(function () use ($id): void {
+        $returned = DB::transaction(function () use ($id): bool {
             $loan = Loan::whereKey($id)->lockForUpdate()->firstOrFail();
-            if ($loan->tanggal_kembali) return;
-            $loan->update(['status' => 'dikembalikan', 'tanggal_kembali' => today()]);
-            $loan->book()->lockForUpdate()->first()->increment('stok_tersedia');
+            if ($loan->tanggal_kembali) {
+                return true;
+            }
+
+            $book = Book::whereKey($loan->book_id)->lockForUpdate()->firstOrFail();
+
+            if ($book->stok_tersedia >= $book->stok) {
+                return false;
+            }
+
+            $loan->update(['tanggal_kembali' => today()]);
+            $book->stok_tersedia++;
+            $book->save();
+
+            return true;
         });
+
+        if (! $returned) {
+            session()->flash('error', 'Stok buku tidak konsisten. Periksa data inventaris sebelum pengembalian.');
+
+            return;
+        }
+
         session()->flash('success', 'Pengembalian buku berhasil dicatat.');
     }
 
@@ -105,7 +144,7 @@ class LoanManager extends Component
             'instansi_unit',
             'tanggal_pinjam',
             'tanggal_jatuh_tempo',
-            'catatan'
+            'catatan',
         ]);
         $this->resetValidation();
     }
@@ -123,7 +162,7 @@ class LoanManager extends Component
                 ->latest()
                 ->chunkById(500, function ($loans) use ($handle): void {
                     foreach ($loans as $loan) {
-                        fputcsv($handle, [
+                        fputcsv($handle, array_map([Csv::class, 'safeCell'], [
                             $loan->nama_peminjam,
                             $loan->nip_peminjam ?? '',
                             $loan->instansi_unit ?? '',
@@ -134,7 +173,7 @@ class LoanManager extends Component
                             $loan->current_status,
                             $loan->petugas?->name ?? '',
                             $loan->catatan ?? '',
-                        ]);
+                        ]));
                     }
                 });
 
@@ -153,19 +192,20 @@ class LoanManager extends Component
                     return;
                 }
 
-                $query->where('status', $this->statusFilter);
+                if ($this->statusFilter === 'dipinjam') {
+                    $query->whereNull('tanggal_kembali')
+                        ->whereDate('tanggal_jatuh_tempo', '>=', today());
+
+                    return;
+                }
+
+                $query->whereNotNull('tanggal_kembali');
             });
     }
 
     public function render()
     {
         $loans = $this->filteredLoansQuery()->with(['book', 'petugas'])->latest()->paginate(10);
-        $loans->getCollection()->each(function (Loan $loan): void {
-            if ($loan->current_status !== $loan->status && ! $loan->tanggal_kembali) {
-                $loan->status = $loan->current_status;
-            }
-        });
-
         $selectedBook = $this->book_id ? Book::with('category')->find($this->book_id) : null;
 
         $search = trim($this->bookSearch);

@@ -14,7 +14,7 @@ class Loan extends Model
 
     protected $fillable = [
         'book_id', 'petugas_id', 'nama_peminjam', 'nip_peminjam', 'instansi_unit',
-        'tanggal_pinjam', 'tanggal_jatuh_tempo', 'tanggal_kembali', 'status', 'catatan',
+        'tanggal_pinjam', 'tanggal_jatuh_tempo', 'tanggal_kembali', 'catatan',
     ];
 
     protected function casts(): array

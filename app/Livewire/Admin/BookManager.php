@@ -4,11 +4,15 @@ namespace App\Livewire\Admin;
 
 use App\Models\Book;
 use App\Models\Category;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Throwable;
 
 class BookManager extends Component
 {
@@ -16,24 +20,39 @@ class BookManager extends Component
     use WithPagination;
 
     public bool $showForm = false;
+
     public ?int $editingId = null;
+
     public string $search = '';
+
     public string $category_id = '';
+
     public string $judul = '';
+
     public string $penulis = '';
+
     public string $penerbit = '';
+
     public string $tahun_terbit = '';
+
     public string $jumlah_halaman = '';
+
     public string $isbn = '';
+
     public string $no_klasifikasi = '';
+
     public string $lokasi_rak = '';
+
     public int $stok = 1;
+
     public int $stok_tersedia = 1;
+
     public string $deskripsi = '';
 
     /**
      * File upload property for new book cover
-     * @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile|null
+     *
+     * @var TemporaryUploadedFile|null
      */
     public $cover = null;
 
@@ -55,7 +74,9 @@ class BookManager extends Component
             'no_klasifikasi' => ['nullable', 'string', 'max:50'],
             'lokasi_rak' => ['nullable', 'string', 'max:50'],
             'stok' => ['required', 'integer', 'min:0'],
-            'stok_tersedia' => ['required', 'integer', 'min:0', 'lte:stok'],
+            'stok_tersedia' => $this->editingId
+                ? ['nullable', 'integer', 'min:0']
+                : ['required', 'integer', 'min:0', 'lte:stok'],
             'deskripsi' => ['nullable', 'string'],
             'cover' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,jpg,webp'],
         ];
@@ -77,6 +98,7 @@ class BookManager extends Component
     ];
 
     public bool $showQuickCategoryModal = false;
+
     public string $newCategoryName = '';
 
     public function openQuickCategoryModal(): void
@@ -102,9 +124,17 @@ class BookManager extends Component
             'newCategoryName.unique' => 'Nama kategori ini sudah ada.',
         ]);
 
+        $slug = Str::slug($this->newCategoryName);
+
+        if (Category::where('slug', $slug)->exists()) {
+            throw ValidationException::withMessages([
+                'newCategoryName' => 'Nama kategori menghasilkan slug yang sudah digunakan.',
+            ]);
+        }
+
         $category = Category::create([
             'nama_kategori' => $this->newCategoryName,
-            'slug' => \Illuminate\Support\Str::slug($this->newCategoryName),
+            'slug' => $slug,
         ]);
 
         $this->category_id = (string) $category->id;
@@ -161,8 +191,9 @@ class BookManager extends Component
     public function removeExistingCover(): void
     {
         if ($this->editingId && $this->existingCover) {
-            Storage::disk('public')->delete($this->existingCover);
-            Book::where('id', $this->editingId)->update(['cover_image' => null]);
+            $coverToDelete = $this->existingCover;
+            Book::findOrFail($this->editingId)->update(['cover_image' => null]);
+            Storage::disk('public')->delete($coverToDelete);
             $this->existingCover = null;
             session()->flash('success', 'Sampul buku berhasil dihapus.');
         }
@@ -173,42 +204,70 @@ class BookManager extends Component
         $data = $this->validate();
         unset($data['cover']); // Remove uploaded file object from mass assignment array
 
-        // Handle cover image upload
-        if ($this->cover) {
-            $path = $this->cover->store('covers', 'public');
-            $data['cover_image'] = $path;
+        $newCover = $this->cover?->store('covers', 'public');
 
-            // Delete previous cover if exists
-            if ($this->editingId && $this->existingCover) {
-                Storage::disk('public')->delete($this->existingCover);
+        if ($newCover) {
+            $data['cover_image'] = $newCover;
+        }
+
+        try {
+            DB::transaction(function () use ($data): void {
+                if ($this->editingId) {
+                    $book = Book::whereKey($this->editingId)->lockForUpdate()->firstOrFail();
+                    $activeLoans = $book->loans()->whereNull('tanggal_kembali')->count();
+
+                    if ($data['stok'] < $activeLoans) {
+                        throw ValidationException::withMessages([
+                            'stok' => "Total stok minimal {$activeLoans}, sesuai jumlah peminjaman aktif.",
+                        ]);
+                    }
+
+                    $data['stok_tersedia'] = $data['stok'] - $activeLoans;
+                    $book->update($data);
+
+                    return;
+                }
+
+                $data['stok_tersedia'] = $data['stok'];
+                Book::create($data);
+            });
+        } catch (Throwable $exception) {
+            if ($newCover) {
+                Storage::disk('public')->delete($newCover);
             }
+
+            throw $exception;
         }
 
-        if ($this->editingId) {
-            Book::findOrFail($this->editingId)->update($data);
-            session()->flash('success', 'Data buku berhasil diperbarui.');
-        } else {
-            Book::create($data);
-            session()->flash('success', 'Buku baru berhasil ditambahkan ke katalog.');
+        if ($newCover && $this->editingId && $this->existingCover) {
+            Storage::disk('public')->delete($this->existingCover);
         }
+
+        session()->flash('success', $this->editingId
+            ? 'Data buku berhasil diperbarui.'
+            : 'Buku baru berhasil ditambahkan ke katalog.');
 
         $this->resetForm();
     }
 
     public function delete(int $id): void
     {
-        $book = Book::withCount(['loans as active_loans_count' => fn ($query) => $query->whereNull('tanggal_kembali')])->findOrFail($id);
-        
-        if ($book->active_loans_count > 0) {
-            session()->flash('error', 'Buku tidak dapat dihapus karena masih memiliki peminjaman aktif.');
+        $book = Book::withCount('loans')->findOrFail($id);
+
+        if ($book->loans_count > 0) {
+            session()->flash('error', 'Buku tidak dapat dihapus karena memiliki riwayat peminjaman. Arsipkan atau kosongkan stok jika buku tidak lagi dilayankan.');
+
             return;
         }
 
-        if ($book->cover_image) {
-            Storage::disk('public')->delete($book->cover_image);
-        }
+        $coverToDelete = $book->cover_image;
 
         $book->delete();
+
+        if ($coverToDelete) {
+            Storage::disk('public')->delete($coverToDelete);
+        }
+
         session()->flash('success', 'Buku berhasil dihapus dari katalog.');
     }
 
@@ -254,4 +313,3 @@ class BookManager extends Component
         ])->layout('layouts.admin', ['title' => 'Koleksi Buku']);
     }
 }
-

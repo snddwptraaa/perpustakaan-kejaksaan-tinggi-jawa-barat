@@ -13,6 +13,7 @@ class UserManagerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private User $superadmin;
 
     protected function setUp(): void
@@ -27,6 +28,13 @@ class UserManagerTest extends TestCase
     {
         $response = $this->actingAs($this->superadmin)->get(route('admin.users'));
         $response->assertOk();
+    }
+
+    public function test_regular_admin_cannot_access_users_page(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('admin.users'))
+            ->assertForbidden();
     }
 
     public function test_can_open_create_user_modal(): void
@@ -100,6 +108,18 @@ class UserManagerTest extends TestCase
         Livewire::actingAs($this->superadmin)
             ->test(UserManager::class)
             ->call('delete', $this->superadmin->id);
+
+        $this->assertDatabaseHas('users', ['id' => $this->superadmin->id]);
+    }
+
+    public function test_regular_admin_cannot_invoke_user_deletion_action(): void
+    {
+        $otherAdmin = User::factory()->create(['role' => 'admin']);
+
+        Livewire::actingAs($otherAdmin)
+            ->test(UserManager::class)
+            ->call('delete', $this->superadmin->id)
+            ->assertSessionHas('error', 'Hanya superadmin yang dapat menghapus akun lain.');
 
         $this->assertDatabaseHas('users', ['id' => $this->superadmin->id]);
     }

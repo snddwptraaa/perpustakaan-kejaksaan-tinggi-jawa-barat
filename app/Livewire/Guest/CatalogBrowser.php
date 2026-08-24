@@ -12,7 +12,9 @@ class CatalogBrowser extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $category = '';
+
     public string $availability = '';
 
     public function updatedSearch(): void

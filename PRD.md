@@ -1,6 +1,8 @@
 # Product Requirements Document (PRD)
 ## Sistem Informasi Perpustakaan Kejaksaan Tinggi Jawa Barat
 
+> Dokumen ini adalah baseline kebutuhan produk v1. Status implementasi aktual dirangkum pada bagian 10 dan bukan bukti kesiapan production.
+
 ---
 
 ## 1. Latar Belakang
@@ -24,7 +26,7 @@ Kejaksaan Tinggi Jawa Barat memiliki perpustakaan internal yang selama ini penge
 - Katalog buku publik (read-only, tanpa proses pinjam online)
 - Admin panel untuk CRUD buku, kategori, dan pengelolaan peminjaman
 - Pencatatan peminjaman & pengembalian buku dilakukan manual oleh petugas
-- Laporan kunjungan dan peminjaman (harian/bulanan)
+- Laporan dan ekspor CSV kunjungan/peminjaman; rekap bulanan teragregasi masih pengembangan lanjutan
 
 ### Di luar scope (v1):
 - Peminjaman online / reservasi buku oleh tamu
@@ -82,6 +84,8 @@ Kejaksaan Tinggi Jawa Barat memiliki perpustakaan internal yang selama ini penge
 - NFR-03: Data pengunjung tersimpan aman dan hanya bisa diakses admin
 - NFR-04: Sistem menggunakan autentikasi standar Laravel (hashed password)
 - NFR-05: Antarmuka menggunakan bahasa Indonesia formal, sesuai identitas instansi pemerintah
+- NFR-06: Data pribadi memiliki dasar pemrosesan/persetujuan, masa retensi, prosedur penghapusan, serta backup yang terdokumentasi
+- NFR-07: Deployment production menggunakan HTTPS, secure cookie, debug nonaktif, monitoring, dan backup teruji
 
 ## 8. Batasan (Constraints)
 
@@ -94,3 +98,11 @@ Kejaksaan Tinggi Jawa Barat memiliki perpustakaan internal yang selama ini penge
 - Semua pengunjung tercatat otomatis di sistem (0% pencatatan manual di buku fisik)
 - Petugas dapat menemukan status buku dalam < 30 detik lewat admin panel
 - Laporan bulanan dapat digenerate tanpa rekap manual
+
+## 10. Status Implementasi
+
+- **Selesai:** gate buku tamu, katalog dan detail buku, autentikasi/role admin, pengelolaan buku/kategori/user, transaksi pinjam-kembali, dashboard, pencarian/filter, serta ekspor CSV.
+- **Parsial:** laporan dapat difilter dan diekspor, tetapi belum menyediakan agregasi bulanan khusus; performa katalog 2 detik belum dibuktikan lewat load test.
+- **Tersedia di kode:** persetujuan privasi, retensi terkonfigurasi (default nonaktif), CI, readiness check, security headers, dan penanganan penghapusan buku ber-riwayat.
+- **Masih bergantung deployment:** keputusan durasi retensi, backup otomatis dan uji restore, TLS, monitoring/alerting, serta eksekusi full test pada runner dengan `pdo_sqlite`.
+- **Belum tersedia:** audit trail administratif/export yang immutable.

@@ -1,16 +1,40 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     [x-cloak] { display: none !important; }
+    html { color-scheme: light; }
+    body { min-width: 320px; }
     :focus-visible { outline: 3px solid #D4A900; outline-offset: 3px; }
     ::selection { background: #F4C542; color: #064E3B; }
+    input::placeholder, textarea::placeholder { color: #94a3b8; }
 }
 
 @layer components {
+    .skip-link {
+        @apply fixed left-4 top-4 z-[100] -translate-y-24 rounded-lg bg-kejati-gold px-4 py-2 text-sm font-bold text-kejati-dark shadow-xl transition focus:translate-y-0;
+    }
+    .page-shell { @apply mx-auto w-full max-w-[1600px] space-y-6; }
+    .page-kicker { @apply inline-flex items-center gap-2 rounded-full bg-kejati/10 px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.16em] text-kejati; }
+    .page-title { @apply mt-2 text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl; }
+    .page-description { @apply mt-1.5 max-w-3xl text-sm leading-6 text-slate-500; }
+    .surface { @apply rounded-2xl border border-stone-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03),0_12px_32px_rgba(15,23,42,0.04)]; }
+    .field-control { @apply w-full rounded-xl border-stone-300 bg-stone-50/70 text-sm shadow-sm transition hover:border-stone-400 focus:border-kejati focus:bg-white focus:ring-kejati; }
+    .btn-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-kejati/15 transition hover:-translate-y-0.5 hover:bg-kejati-dark hover:shadow-xl disabled:pointer-events-none disabled:opacity-60; }
+    .btn-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:border-kejati/30 hover:bg-kejati/5 hover:text-kejati disabled:pointer-events-none disabled:opacity-60; }
+    .status-dot { @apply inline-block h-2 w-2 rounded-full ring-4 ring-emerald-500/10; }
+    .table-scroll { @apply overflow-x-auto overscroll-x-contain [scrollbar-width:thin]; }
+    [wire\:loading].ui-loading { @apply cursor-wait opacity-70; }
     .pagination-wrapper nav > div:first-child { display: none; }
     .pagination-wrapper nav > div:last-child { display: flex; align-items: center; justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }

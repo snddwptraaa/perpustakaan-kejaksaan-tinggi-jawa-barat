@@ -16,7 +16,9 @@ class LoanManagerTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private Category $category;
+
     private Book $book;
 
     protected function setUp(): void
@@ -88,8 +90,9 @@ class LoanManagerTest extends TestCase
             'book_id' => $this->book->id,
             'nama_peminjam' => 'Jaksa Pratama Ahmad',
             'nip_peminjam' => '198801012015011001',
-            'status' => 'dipinjam',
         ]);
+
+        $this->assertSame('dipinjam', Loan::latest('id')->first()->current_status);
 
         $this->assertEquals(2, $this->book->fresh()->stok_tersedia);
     }
@@ -102,7 +105,6 @@ class LoanManagerTest extends TestCase
             'nama_peminjam' => 'Jaksa Budi',
             'tanggal_pinjam' => now()->subDays(3)->toDateString(),
             'tanggal_jatuh_tempo' => now()->addDays(4)->toDateString(),
-            'status' => 'dipinjam',
         ]);
         $this->book->decrement('stok_tersedia'); // stok_tersedia now 2
 
@@ -111,7 +113,7 @@ class LoanManagerTest extends TestCase
             ->call('returnBook', $loan->id);
 
         $this->assertNotNull($loan->fresh()->tanggal_kembali);
-        $this->assertEquals('dikembalikan', $loan->fresh()->status);
+        $this->assertEquals('dikembalikan', $loan->fresh()->current_status);
         $this->assertEquals(3, $this->book->fresh()->stok_tersedia);
     }
 

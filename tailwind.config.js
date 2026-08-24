@@ -23,7 +23,11 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['Plus Jakarta Sans', ...defaultTheme.fontFamily.sans],
+                sans: ['Inter', 'ui-sans-serif', 'system-ui', ...defaultTheme.fontFamily.sans],
+                display: ['Georgia', ...defaultTheme.fontFamily.serif],
+            },
+            boxShadow: {
+                'soft': '0 1px 2px rgba(15,23,42,.03), 0 18px 45px rgba(15,23,42,.06)',
             },
         },
     },

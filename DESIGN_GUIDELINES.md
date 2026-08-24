@@ -1,6 +1,8 @@
 # Design Guidelines
 ## Sistem Informasi Perpustakaan Kejaksaan Tinggi Jawa Barat
 
+> Status: design system aktif. Implementasi utama berada di `tailwind.config.js` dan `resources/css/app.css`.
+
 ---
 
 ## 1. Prinsip Desain
@@ -20,7 +22,7 @@ Palet aplikasi mengambil referensi dari lambang pada logo yang diberikan: hijau 
 | Primary Dark (hover/active) | Hijau tua | `#064E3B` |
 | Secondary | Hijau daun | `#15803D` |
 | Secondary/Accent | Kuning emas | `#F4C542` |
-| Accent Dark | Emas gelap untuk teks kecil | `#806000` |
+| Accent Dark | Emas gelap untuk teks kecil | `#B89100` |
 | Background | Putih kehijauan | `#F7FAF8` |
 | Surface/Card | Putih dengan border tipis | `#FFFFFF` + `border-stone-200` |
 | Text Primary | Abu gelap/hitam | `#1F2937` |
@@ -41,7 +43,7 @@ Token Tailwind utama tersedia pada `tailwind.config.js` melalui namespace `kejat
 
 Logo referensi menampilkan komposisi hijau, emas, hitam, dan putih. Aplikasi menggunakan komposisi tersebut secara proporsional: hijau untuk navigasi dan aksi utama, emas untuk penanda fokus/aksen, dan bidang putih untuk menjaga keterbacaan data administrasi.
 
-Karena file gambar logo belum tersimpan di repository, implementasi saat ini menggunakan token CSS/Tailwind dan tidak mengubah logo menjadi aset baru.
+Aset logo tersedia di `public/images/`. Gunakan `public/images/logo.svg` sebagai referensi utama dan selalu sertakan teks alternatif yang sesuai konteks.
 
 ## 2.2. Token implementasi
 
@@ -58,7 +60,7 @@ Karena file gambar logo belum tersimpan di repository, implementasi saat ini men
 
 ## 3. Tipografi
 
-- Font: **Inter** atau **Plus Jakarta Sans** (bersih, formal, mendukung karakter Indonesia dengan baik) — fallback ke `sans-serif` Tailwind default
+- Body/UI: **Plus Jakarta Sans**; heading editorial publik dapat menggunakan **DM Serif Display** melalui token `font-display`
 - Heading: font-semibold hingga font-bold
 - Body text: font-normal, ukuran minimal 14px (16px untuk form supaya nyaman diisi tamu segala usia)
 
@@ -74,7 +76,7 @@ Karena file gambar logo belum tersimpan di repository, implementasi saat ini men
 
 ### Halaman Publik (Tamu)
 - Layout sederhana, single column untuk form kunjungan
-- Katalog buku: grid card, responsive (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`)
+- Katalog buku: grid card responsif (`1 / 2 / 3 / 4` kolom dari mobile hingga desktop lebar)
 - Header berisi logo Kejaksaan + nama "Perpustakaan Kejati Jawa Barat"
 - Tidak ada sidebar kompleks — fokus ke konten
 
@@ -105,6 +107,10 @@ Karena file gambar logo belum tersimpan di repository, implementasi saat ini men
 - Aksi (edit/hapus) berupa icon button dengan tooltip
 - Konfirmasi modal sebelum hapus data
 
+**Primitives bersama**
+- Gunakan `.surface`, `.field-control`, `.btn-primary`, `.btn-secondary`, `.page-kicker`, `.page-title`, dan `.page-description` sebelum membuat variasi baru
+- Semua aksi asynchronous harus memiliki loading/disabled state dan pesan hasil yang dapat dipahami
+
 ## 6. Iconography
 
 - Gunakan set ikon konsisten: **Heroicons** (cocok dengan ekosistem Tailwind/Livewire)
@@ -115,6 +121,8 @@ Karena file gambar logo belum tersimpan di repository, implementasi saat ini men
 - Prioritas: desktop untuk admin panel (petugas kerja di meja), tapi tetap harus berfungsi baik di tablet
 - Katalog publik: mobile-first, karena tamu mungkin akses dari HP sambil menunggu
 - Breakpoint Tailwind standar: `sm`, `md`, `lg`, `xl`
+- Hormati `prefers-reduced-motion`; jangan membuat informasi hanya dapat dipahami melalui animasi
+- Sediakan skip-link dan focus-visible yang jelas pada layout utama
 
 ## 8. Tone & Microcopy
 

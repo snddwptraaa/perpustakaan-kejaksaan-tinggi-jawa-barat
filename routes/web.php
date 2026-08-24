@@ -9,9 +9,22 @@ use App\Livewire\Admin\VisitorReport;
 use App\Livewire\Guest\BookDetail;
 use App\Livewire\Guest\CatalogBrowser;
 use App\Livewire\Guest\VisitorForm;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('/ready', function () {
+    try {
+        DB::select('select 1');
+        $storageReady = is_writable(Storage::disk('local')->path('.'));
+
+        return response()->json(['status' => $storageReady ? 'ready' : 'not_ready'], $storageReady ? 200 : 503);
+    } catch (Throwable) {
+        return response()->json(['status' => 'not_ready'], 503);
+    }
+})->name('readiness');
 
 Route::middleware('auth')->group(function (): void {
     Route::view('/profile', 'profile')->name('profile');

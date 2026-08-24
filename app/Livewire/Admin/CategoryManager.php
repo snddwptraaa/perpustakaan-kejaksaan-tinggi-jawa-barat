@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use App\Models\Category;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -12,14 +13,17 @@ class CategoryManager extends Component
     use WithPagination;
 
     public bool $showForm = false;
+
     public ?int $editingId = null;
+
     public string $nama_kategori = '';
+
     public string $search = '';
 
     protected function rules(): array
     {
         return [
-            'nama_kategori' => ['required', 'string', 'max:100', 'unique:categories,nama_kategori,' . $this->editingId],
+            'nama_kategori' => ['required', 'string', 'max:100', 'unique:categories,nama_kategori,'.$this->editingId],
         ];
     }
 
@@ -53,6 +57,17 @@ class CategoryManager extends Component
         $data = $this->validate();
         $data['slug'] = Str::slug($data['nama_kategori']);
 
+        $slugExists = Category::query()
+            ->where('slug', $data['slug'])
+            ->when($this->editingId, fn ($query) => $query->whereKeyNot($this->editingId))
+            ->exists();
+
+        if ($slugExists) {
+            throw ValidationException::withMessages([
+                'nama_kategori' => 'Nama kategori menghasilkan slug yang sudah digunakan.',
+            ]);
+        }
+
         if ($this->editingId) {
             Category::findOrFail($this->editingId)->update($data);
             session()->flash('success', 'Kategori buku berhasil diperbarui.');
@@ -67,9 +82,10 @@ class CategoryManager extends Component
     public function delete(int $id): void
     {
         $category = Category::withCount('books')->findOrFail($id);
-        
+
         if ($category->books_count > 0) {
             session()->flash('error', "Kategori '{$category->nama_kategori}' tidak dapat dihapus karena masih digunakan oleh {$category->books_count} buku.");
+
             return;
         }
 
@@ -93,4 +109,3 @@ class CategoryManager extends Component
         ])->layout('layouts.admin', ['title' => 'Kategori Buku']);
     }
 }
-

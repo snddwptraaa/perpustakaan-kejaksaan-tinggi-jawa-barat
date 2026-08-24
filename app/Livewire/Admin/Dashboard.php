@@ -13,8 +13,10 @@ class Dashboard extends Component
     {
         return view('livewire.admin.dashboard', [
             'totalBooks' => Book::count(),
+            'totalCopies' => Book::sum('stok'),
             'availableCopies' => Book::sum('stok_tersedia'),
             'activeLoans' => Loan::active()->count(),
+            'overdueLoans' => Loan::active()->whereDate('tanggal_jatuh_tempo', '<', today())->count(),
             'todayVisitors' => Visitor::whereDate('created_at', today())->count(),
             'recentLoans' => Loan::with('book')->latest()->limit(5)->get(),
         ])->layout('layouts.admin', ['title' => 'Ringkasan']);

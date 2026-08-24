@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Livewire\Admin\BookManager;
 use App\Models\Book;
 use App\Models\Category;
+use App\Models\Loan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -17,6 +18,7 @@ class BookManagerTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected Category $category;
 
     protected function setUp(): void
@@ -152,5 +154,36 @@ class BookManagerTest extends TestCase
             ->set('stok_tersedia', 5)
             ->call('save')
             ->assertHasErrors(['category_id', 'judul', 'penulis', 'stok', 'stok_tersedia']);
+    }
+
+    public function test_book_with_completed_loan_history_and_cover_cannot_be_deleted(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('covers/history.jpg', 'image');
+
+        $book = Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Arsip Buku',
+            'penulis' => 'Penulis',
+            'stok' => 1,
+            'stok_tersedia' => 1,
+            'cover_image' => 'covers/history.jpg',
+        ]);
+        Loan::create([
+            'book_id' => $book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Peminjam Lama',
+            'tanggal_pinjam' => now()->subDays(10),
+            'tanggal_jatuh_tempo' => now()->subDays(3),
+            'tanggal_kembali' => now()->subDays(4),
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('delete', $book->id)
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseHas('books', ['id' => $book->id]);
+        Storage::disk('public')->assertExists('covers/history.jpg');
     }
 }

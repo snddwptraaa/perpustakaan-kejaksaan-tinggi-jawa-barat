@@ -11,7 +11,8 @@
 </head>
 
 <body class="min-h-full font-sans antialiased bg-stone-50 text-slate-900">
-    <header class="sticky top-0 z-50 text-white border-b shadow-md border-white/10 bg-kejati/95 backdrop-blur-md">
+    <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
+    <header x-data="{ menuOpen: false }" class="sticky top-0 z-50 text-white border-b shadow-md border-white/10 bg-kejati/95 backdrop-blur-md">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 lg:px-8">
             <a href="{{ route('home') }}" class="flex items-center gap-3">
                 <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan Tinggi Jawa Barat"
@@ -23,7 +24,7 @@
                 </span>
             </a>
 
-            <nav class="flex items-center gap-1 text-xs font-medium sm:gap-2 sm:text-sm" aria-label="Navigasi utama">
+            <nav class="hidden items-center gap-1 text-sm font-medium md:flex" aria-label="Navigasi utama">
                 <a href="#hero"
                     class="rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-white/90 transition hover:bg-white/10 hover:text-white">Beranda</a>
                 <a href="#tentang"
@@ -37,10 +38,23 @@
             <a href="{{ route('login') }}"
                 class="hidden px-4 py-2 text-sm font-semibold text-white transition border rounded-lg md:inline-flex border-white/25 hover:bg-white/10">Masuk
                 petugas</a>
+            <button type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-controls="home-mobile-navigation"
+                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 md:hidden" aria-label="Buka menu">
+                <svg x-show="!menuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
+                <svg x-cloak x-show="menuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
         </div>
+        <nav id="home-mobile-navigation" x-cloak x-show="menuOpen" x-transition.origin.top class="border-t border-white/10 px-5 py-3 md:hidden" aria-label="Navigasi mobile">
+            <div class="mx-auto grid max-w-7xl grid-cols-2 gap-2 text-sm font-semibold">
+                <a href="#tentang" class="rounded-xl bg-white/10 px-4 py-3">Tentang</a>
+                <a href="#layanan" class="rounded-xl bg-white/10 px-4 py-3">Layanan</a>
+                <a href="{{ route('kunjungan') }}" class="rounded-xl bg-kejati-gold px-4 py-3 text-kejati-dark">Jelajahi katalog</a>
+                <a href="{{ route('login') }}" class="rounded-xl px-4 py-3 text-white/80">Masuk petugas</a>
+            </div>
+        </nav>
     </header>
 
-    <main>
+    <main id="main-content" tabindex="-1">
         <section id="hero" class="relative overflow-hidden text-white bg-kejati">
             <div class="absolute -right-40 -top-48 h-[38rem] w-[38rem] rounded-full border border-kejati-gold/15"></div>
             <div class="absolute bottom-0 right-0 h-40 w-2/3 bg-gradient-to-l from-[#064E3B]/60 to-transparent"></div>
@@ -51,7 +65,7 @@
                         class="mb-6 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.25em] text-kejati-gold">
                         <span class="w-10 h-px bg-kejati-gold"></span> Ruang pengetahuan Kejati Jabar
                     </p>
-                    <h1 class="text-5xl font-semibold leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
+                    <h1 class="font-display text-5xl leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
                         Baca untuk <span class="text-kejati-gold">memahami.</span>
                     </h1>
                     <p class="max-w-xl text-lg leading-8 mt-7 text-white/70">

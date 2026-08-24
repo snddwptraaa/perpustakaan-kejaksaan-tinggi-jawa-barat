@@ -1,8 +1,8 @@
-<div class="mx-auto max-w-5xl px-5 py-10 lg:px-8 lg:py-16"><a href="{{ route('katalog') }}"
-        class="inline-flex items-center gap-2 text-sm font-semibold text-kejati hover:underline" wire:navigate>← Kembali
+<div class="mx-auto max-w-5xl px-5 py-8 lg:px-8 lg:py-14"><a href="{{ route('katalog') }}"
+        class="btn-secondary" wire:navigate>← Kembali
         ke katalog</a>
     <div
-        class="mt-8 grid gap-10 rounded-3xl border border-stone-200 bg-white p-6 shadow-sm sm:p-10 lg:grid-cols-[280px_1fr] lg:p-12">
+        class="surface mt-6 grid gap-10 overflow-hidden p-6 sm:p-10 lg:grid-cols-[280px_1fr] lg:p-12">
         <div
             class="flex h-80 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#166534] to-[#064E3B]">
             @if ($book->cover_image)<img src="{{ Storage::url($book->cover_image) }}" alt="Sampul {{ $book->judul }}"
@@ -14,7 +14,7 @@
                     class="rounded-full bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-yellow-900">{{ $book->category->nama_kategori }}</span><span
                     class="rounded-full px-3 py-1 text-xs font-bold {{ $book->is_available ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-100 text-slate-600' }}">{{ $book->is_available ? 'Tersedia' : 'Tidak tersedia' }}</span>
             </div>
-            <h1 class="mt-5 text-3xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-4xl">
+            <h1 class="mt-5 font-display text-4xl leading-tight tracking-tight text-kejati-dark sm:text-5xl">
                 {{ $book->judul }}
             </h1>
             <p class="mt-3 text-lg text-slate-500">{{ $book->penulis }}</p>
@@ -44,7 +44,7 @@
                     <p class="mt-1 font-mono text-sm text-slate-700">{{ $book->isbn ?: '—' }}</p>
                 </div>
             </div>
-            <div class="mt-6 rounded-xl bg-stone-50 p-4">
+            <div class="mt-6 rounded-2xl border border-stone-200 bg-stone-50 p-4">
                 <p class="text-xs uppercase tracking-wide text-slate-400">Ketersediaan saat ini</p>
                 <p class="mt-1 text-lg font-semibold {{ $book->is_available ? 'text-emerald-700' : 'text-slate-600' }}">
                     {{ $book->stok_tersedia }} dari {{ $book->stok }} eksemplar tersedia
@@ -60,9 +60,9 @@
                 </div>
             @endif
 
-            <div class="mt-8 rounded-xl border border-kejati-gold/50 bg-amber-50 p-4 text-sm leading-6 text-yellow-900">
-                Ingin meminjam buku ini? Silakan tanyakan langsung kepada petugas di perpustakaan. Peminjaman dicatat
-                secara manual di lokasi.
+            <div class="mt-8 flex items-start gap-3 rounded-2xl border border-kejati-gold/50 bg-amber-50 p-4 text-sm leading-6 text-yellow-900">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-kejati-gold text-kejati-dark">i</span>
+                <p><strong class="block text-kejati-dark">Tertarik meminjam?</strong>Silakan tunjukkan halaman ini kepada petugas perpustakaan. Peminjaman dicatat langsung di lokasi.</p>
             </div>
         </div>
     </div>

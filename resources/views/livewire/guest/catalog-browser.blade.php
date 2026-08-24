@@ -1,47 +1,49 @@
-<div class="mx-auto max-w-7xl px-5 py-10 lg:px-8 lg:py-14">
+<div class="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-12">
     <div class="flex flex-col gap-6 border-b border-stone-200 pb-8 md:flex-row md:items-end md:justify-between">
         <div>
-            <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Katalog terbuka</p>
-            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Koleksi untuk Anda
+            <p class="page-kicker">Katalog terbuka</p>
+            <h1 class="mt-3 font-display text-4xl tracking-tight text-kejati-dark sm:text-5xl">Koleksi untuk Anda
                 telusuri</h1>
             <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">Temukan referensi hukum dan pengetahuan
                 pendukung. Peminjaman dilakukan secara langsung melalui petugas perpustakaan.</p>
         </div>
-        <div class="flex items-center gap-2 text-sm text-slate-500"><span
-                class="h-2 w-2 rounded-full bg-emerald-500"></span> {{ $books->total() }} judul terdaftar</div>
+        <div class="surface flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600"><span
+                class="status-dot bg-emerald-500 text-emerald-500"></span> {{ $books->total() }} judul ditemukan</div>
     </div>
-    <div class="mt-8 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+    <div class="surface sticky top-[73px] z-20 mt-6 p-3 sm:p-4">
         <div class="grid gap-4 lg:grid-cols-[1fr_220px_200px_auto]">
             <div class="relative"><label for="search" class="sr-only">Cari judul atau penulis</label><span
                     class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400"
                     aria-hidden="true">⌕</span><input wire:model.live.debounce.300ms="search" id="search" type="search"
                     placeholder="Cari judul atau penulis…"
-                    class="w-full rounded-xl border-stone-200 bg-stone-50 py-3 pl-11 pr-4 text-sm focus:border-kejati focus:ring-kejati">
+                    class="field-control py-3 pl-11 pr-4">
             </div>
             <div><label for="category" class="sr-only">Filter kategori</label><select wire:model.live="category"
                     id="category"
-                    class="w-full rounded-xl border-stone-200 bg-stone-50 py-3 text-sm focus:border-kejati focus:ring-kejati">
+                    class="field-control py-3">
                     <option value="">Semua kategori</option>@foreach ($categories as $item)
                     <option value="{{ $item->id }}">{{ $item->nama_kategori }}</option>@endforeach
                 </select></div>
             <div><label for="availability" class="sr-only">Filter ketersediaan</label><select
                     wire:model.live="availability" id="availability"
-                    class="w-full rounded-xl border-stone-200 bg-stone-50 py-3 text-sm focus:border-kejati focus:ring-kejati">
+                    class="field-control py-3">
                     <option value="">Semua status</option>
                     <option value="available">Tersedia</option>
                     <option value="unavailable">Tidak tersedia</option>
                 </select></div>@if ($search || $category || $availability)<button
                     wire:click="$set('search', '') ; $set('category', '') ; $set('availability', '')" type="button"
-                class="rounded-xl px-4 py-3 text-sm font-semibold text-kejati hover:bg-kejati/5">Reset</button>@endif
+                class="btn-secondary">Reset</button>@endif
         </div>
     </div>
-    <div wire:loading class="py-8 text-center text-sm font-medium text-kejati">Memuat koleksi…</div>
+    <div wire:loading.delay class="py-10 text-center" role="status" aria-live="polite">
+        <span class="inline-flex items-center gap-3 rounded-full bg-white px-4 py-2 text-sm font-semibold text-kejati shadow-sm"><span class="h-4 w-4 animate-spin rounded-full border-2 border-kejati/20 border-t-kejati"></span>Memuat koleksi…</span>
+    </div>
     <div wire:loading.remove class="mt-8">@if ($books->count())
         <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @foreach ($books as $book)
                 <a href="{{ route('buku.detail', $book) }}"
                     wire:navigate
-                    class="group flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white transition duration-200 hover:-translate-y-1 hover:border-kejati hover:shadow-xl hover:shadow-kejati/10 focus:outline-none focus:ring-2 focus:ring-kejati">
+                    class="group surface flex flex-col overflow-hidden transition duration-200 hover:-translate-y-1 hover:border-kejati/50 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-kejati">
                     <div class="relative flex h-52 items-center justify-center overflow-hidden bg-gradient-to-br from-[#166534] to-[#064E3B]">
                         @if ($book->cover_image)
                             <img src="{{ Storage::url($book->cover_image) }}"
@@ -82,11 +84,14 @@
             @endforeach
         </div>
     <div class="mt-10">{{ $books->links() }}</div>@else<div
-            class="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-16 text-center"><span
+                            class="surface border-dashed px-6 py-16 text-center"><span
                 class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-xl text-slate-400"
                 aria-hidden="true">⌕</span>
             <h2 class="mt-4 font-semibold text-slate-800">Koleksi tidak ditemukan</h2>
             <p class="mt-2 text-sm text-slate-500">Coba gunakan kata kunci atau filter yang berbeda.</p>
+            @if ($search || $category || $availability)
+                <button wire:click="$set('search', '') ; $set('category', '') ; $set('availability', '')" type="button" class="btn-secondary mt-5">Hapus semua filter</button>
+            @endif
         </div>@endif
     </div>
 </div>
