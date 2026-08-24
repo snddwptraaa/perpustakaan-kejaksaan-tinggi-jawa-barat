@@ -42,8 +42,7 @@ class VisitorReport extends Component
             fputcsv($handle, ['Kategori', 'Nama', 'NIP / NRP', 'Instansi / Unit', 'Kontak (HP/Email)', 'Keperluan', 'Waktu Kunjungan']);
 
             $this->filteredVisitorsQuery()
-                ->latest()
-                ->chunkById(500, function ($visitors) use ($handle): void {
+                ->chunkByIdDesc(500, function ($visitors) use ($handle): void {
                     foreach ($visitors as $visitor) {
                         fputcsv($handle, array_map([Csv::class, 'safeCell'], [
                             $visitor->kategori === 'pegawai' ? 'Pegawai Kejaksaan' : 'Tamu / Umum',
@@ -75,7 +74,9 @@ class VisitorReport extends Component
     public function render()
     {
         return view('livewire.admin.visitor-report', [
-            'visitors' => $this->filteredVisitorsQuery()->latest()->paginate(15),
+            'visitors' => $this->filteredVisitorsQuery()
+                ->orderByDesc('id')
+                ->paginate(15),
             'totalVisitors' => Visitor::count(),
             'totalPegawai' => Visitor::where('kategori', 'pegawai')->count(),
             'totalUmum' => Visitor::where('kategori', 'umum')->orWhereNull('kategori')->count(),
