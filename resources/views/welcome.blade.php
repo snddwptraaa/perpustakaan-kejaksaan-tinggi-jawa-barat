@@ -8,6 +8,7 @@
     <meta name="description"
         content="Perpustakaan Kejaksaan Tinggi Jawa Barat — ruang referensi hukum dan pengetahuan.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 
 <body class="min-h-full font-sans antialiased bg-stone-50 text-slate-900">
@@ -349,6 +350,7 @@
     </main>
 
     <x-footer />
+    @livewireScripts
 </body>
 
 </html>
