@@ -1,9 +1,13 @@
 <?php
 
+use App\Livewire\Admin\AuditLogViewer;
 use App\Livewire\Admin\BookManager;
 use App\Livewire\Admin\CategoryManager;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\LoanManager;
+use App\Livewire\Admin\MemberHistory;
+use App\Livewire\Admin\MemberManager;
+use App\Http\Controllers\ExportPdfController;
 use App\Livewire\Admin\UserManager;
 use App\Livewire\Admin\VisitorReport;
 use App\Livewire\Guest\BookDetail;
@@ -38,8 +42,16 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/buku', BookManager::class)->name('books');
     Route::get('/kategori', CategoryManager::class)->name('categories');
     Route::get('/peminjaman', LoanManager::class)->name('loans');
+    Route::get('/anggota', MemberManager::class)->name('members');
+    Route::get('/riwayat-sirkulasi', MemberHistory::class)->name('history');
+    Route::get('/audit-log', AuditLogViewer::class)->middleware('superadmin')->name('audit');
     Route::get('/pengunjung', VisitorReport::class)->name('visitors');
     Route::get('/pengguna', UserManager::class)->middleware('superadmin')->name('users');
+
+    // Export PDF
+    Route::get('/buku/export-pdf', [ExportPdfController::class, 'catalog'])->name('books.export-pdf');
+    Route::get('/pengunjung/export-pdf', [ExportPdfController::class, 'visitors'])->name('visitors.export-pdf');
+    Route::get('/peminjaman/export-pdf', [ExportPdfController::class, 'loans'])->name('loans.export-pdf');
 });
 
 require __DIR__.'/auth.php';

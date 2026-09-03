@@ -39,12 +39,12 @@ class LoginForm extends Form
         }
 
         $user = Auth::user();
-        if (! $user || ! $user->isAdmin()) {
+        if (! $user || ! $user->isAdmin() || ! $user->aktif) {
             Auth::logout();
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'form.email' => 'Akun Anda tidak memiliki hak akses ke panel admin.',
+                'form.email' => 'Akun Anda tidak aktif atau tidak memiliki hak akses ke panel admin.',
             ]);
         }
 

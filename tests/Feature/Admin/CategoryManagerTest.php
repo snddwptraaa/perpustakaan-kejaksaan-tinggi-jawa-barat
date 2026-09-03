@@ -41,7 +41,7 @@ class CategoryManagerTest extends TestCase
 
         Livewire::actingAs($admin)->test(CategoryManager::class)
             ->call('delete', $category->id)
-            ->assertSessionHas('error');
+            ->assertSee('tidak dapat dihapus');
 
         $this->assertDatabaseHas('categories', ['id' => $category->id]);
     }

@@ -34,7 +34,7 @@ class CatalogBrowser extends Component
 
     public function render()
     {
-        $books = Book::query()
+        $books = Book::active()
             ->with('category')
             ->when($this->search, fn ($query) => $query->where(fn ($query) => $query->where('judul', 'like', "%{$this->search}%")->orWhere('penulis', 'like', "%{$this->search}%")))
             ->when($this->category, fn ($query) => $query->where('category_id', $this->category))

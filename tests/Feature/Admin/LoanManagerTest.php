@@ -127,4 +127,50 @@ class LoanManagerTest extends TestCase
             ->call('save')
             ->assertHasErrors(['book_id', 'nama_peminjam']);
     }
+
+    public function test_admin_can_correct_loan_without_changing_stock(): void
+    {
+        $loan = Loan::create([
+            'book_id' => $this->book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Nama Salah',
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_jatuh_tempo' => now()->addDays(7)->toDateString(),
+        ]);
+        $this->book->decrement('stok_tersedia');
+
+        Livewire::actingAs($this->admin)
+            ->test(LoanManager::class)
+            ->call('edit', $loan->id)
+            ->set('nama_peminjam', 'Nama Benar')
+            ->set('tanggal_jatuh_tempo', now()->addDays(14)->toDateString())
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Nama Benar', $loan->fresh()->nama_peminjam);
+        $this->assertEquals(2, $this->book->fresh()->stok_tersedia);
+    }
+
+    public function test_admin_can_cancel_active_loan_and_restore_stock(): void
+    {
+        $loan = Loan::create([
+            'book_id' => $this->book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Peminjam Batal',
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_jatuh_tempo' => now()->addDays(7)->toDateString(),
+        ]);
+        $this->book->decrement('stok_tersedia');
+
+        Livewire::actingAs($this->admin)
+            ->test(LoanManager::class)
+            ->call('cancel', $loan->id)
+            ->assertSee('Peminjaman dibatalkan');
+
+        $loan->refresh();
+        $this->assertNotNull($loan->tanggal_dibatalkan);
+        $this->assertSame($this->admin->id, $loan->petugas_pembatal_id);
+        $this->assertSame('dibatalkan', $loan->current_status);
+        $this->assertEquals(3, $this->book->fresh()->stok_tersedia);
+    }
 }

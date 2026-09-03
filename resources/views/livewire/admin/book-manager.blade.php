@@ -144,9 +144,9 @@
 
                             <!-- Status Badge -->
                             <td class="px-6 py-4 text-center">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold {{ $book->is_available ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
-                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full {{ $book->is_available ? 'bg-emerald-500' : 'bg-rose-500' }}"></span>
-                                    {{ $book->is_available ? 'Tersedia' : 'Habis' }}
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold {{ $book->archived_at ? 'bg-stone-200 text-slate-700' : ($book->is_available ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800') }}">
+                                    <span class="mr-1.5 h-1.5 w-1.5 rounded-full {{ $book->archived_at ? 'bg-slate-500' : ($book->is_available ? 'bg-emerald-500' : 'bg-rose-500') }}"></span>
+                                    {{ $book->archived_at ? 'Diarsipkan' : ($book->is_available ? 'Tersedia' : 'Habis') }}
                                 </span>
                             </td>
 
@@ -160,6 +160,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                         Edit
+                                    </button>
+                                    <button type="button" wire:click="toggleArchive({{ $book->id }})"
+                                        wire:confirm="{{ $book->archived_at ? 'Pulihkan buku ini ke katalog publik?' : 'Arsipkan buku ini dari katalog publik?' }}"
+                                        class="inline-flex items-center rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-700 transition hover:bg-amber-50">
+                                        {{ $book->archived_at ? 'Pulihkan' : 'Arsipkan' }}
                                     </button>
                                     <button type="button"
                                         @click="$dispatch('open-confirm-modal', {

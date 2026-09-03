@@ -111,6 +111,11 @@
                                 {{ $user->created_at->format('d M Y') }}
                             </td>
                             <td class="px-6 py-4 text-right">
+                                <button type="button"
+                                    wire:click="edit({{ $user->id }})"
+                                    class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-kejati transition hover:bg-emerald-50 focus:outline-none">
+                                    Edit
+                                </button>
                                 @if ($user->id !== auth()->id())
                                     <button type="button"
                                         @click="$dispatch('open-confirm-modal', {
@@ -126,8 +131,6 @@
                                         </svg>
                                         Hapus
                                     </button>
-                                @else
-                                    <span class="text-xs text-slate-400 italic">Akun aktif</span>
                                 @endif
                             </td>
                         </tr>
@@ -157,7 +160,7 @@
         @endif
     </div>
 
-    <!-- MODAL POPUP FORM TAMBAH PENGGUNA (CARD MODAL) -->
+    <!-- MODAL POPUP FORM PENGGUNA (CARD MODAL) -->
     @if ($showForm)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-user-title" role="dialog" aria-modal="true">
             <!-- Background Backdrop with Blur -->
@@ -173,13 +176,13 @@
                         <div class="flex items-center justify-between">
                             <div>
                                 <span class="inline-flex items-center rounded-md bg-kejati-gold/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-kejati-gold">
-                                    Akun Baru
+                                    {{ $editingId ? 'Edit Akun' : 'Akun Baru' }}
                                 </span>
                                 <h3 class="mt-1.5 text-xl font-bold text-white" id="modal-user-title">
-                                    Tambah Pengguna Admin
+                                    {{ $editingId ? 'Edit Pengguna Admin' : 'Tambah Pengguna Admin' }}
                                 </h3>
                                 <p class="text-xs text-white/80 mt-0.5">
-                                    Buat kredensial akun baru untuk petugas perpustakaan.
+                                    {{ $editingId ? 'Perbarui identitas, peran, atau kata sandi petugas.' : 'Buat kredensial akun baru untuk petugas perpustakaan.' }}
                                 </p>
                             </div>
                             <button wire:click="resetForm"
@@ -223,11 +226,11 @@
                             <!-- Password -->
                             <div>
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                                    Kata Sandi (Password) <span class="text-rose-600">*</span>
+                                    Kata Sandi (Password) @unless ($editingId)<span class="text-rose-600">*</span>@endunless
                                 </label>
                                 <input wire:model="password"
                                     type="password"
-                                    placeholder="Minimal 8 karakter"
+                                    placeholder="{{ $editingId ? 'Kosongkan jika tidak ingin mengganti' : 'Minimal 8 karakter' }}"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
                                 <x-input-error :messages="$errors->get('password')" class="mt-1.5" />
                             </div>
@@ -237,13 +240,20 @@
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Peran & Hak Akses <span class="text-rose-600">*</span>
                                 </label>
-                                <select wire:model="role"
+                                <select wire:model="role" @disabled($editingId === auth()->id())
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm">
                                     <option value="admin">Petugas Admin (Sirkulasi, Katalog, Pengunjung)</option>
                                     <option value="superadmin">Superadmin (Akses Penuh Seluruh Sistem)</option>
                                 </select>
                                 <x-input-error :messages="$errors->get('role')" class="mt-1.5" />
+                                @if ($editingId === auth()->id())
+                                    <p class="mt-1.5 text-xs text-slate-500">Peran akun yang sedang aktif tidak dapat diubah.</p>
+                                @endif
                             </div>
+                            <label class="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                                <input wire:model="aktif" type="checkbox" @disabled($editingId === auth()->id()) class="rounded border-stone-300 text-kejati focus:ring-kejati">
+                                Akun aktif dan dapat masuk
+                            </label>
                         </div>
 
                         <!-- Footer Actions -->
@@ -257,7 +267,7 @@
                                 wire:loading.attr="disabled"
                                 class="inline-flex items-center gap-2 rounded-xl bg-kejati px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark focus:outline-none disabled:opacity-50">
                                 <span wire:loading wire:target="save" class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                                <span>Simpan Pengguna</span>
+                                <span>{{ $editingId ? 'Simpan Perubahan' : 'Simpan Pengguna' }}</span>
                             </button>
                         </div>
                     </form>

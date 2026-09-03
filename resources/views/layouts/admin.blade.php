@@ -42,11 +42,14 @@
                         ['route' => 'admin.books', 'label' => 'Koleksi buku', 'icon' => 'book'],
                         ['route' => 'admin.categories', 'label' => 'Kategori', 'icon' => 'tag'],
                         ['route' => 'admin.loans', 'label' => 'Peminjaman', 'icon' => 'swap'],
+                        ['route' => 'admin.members', 'label' => 'Anggota', 'icon' => 'users'],
+                        ['route' => 'admin.history', 'label' => 'Riwayat sirkulasi', 'icon' => 'swap'],
                         ['route' => 'admin.visitors', 'label' => 'Pengunjung', 'icon' => 'users'],
                     ];
 
                     if (auth()->user()->isSuperadmin()) {
                         $links[] = ['route' => 'admin.users', 'label' => 'Pengguna Admin', 'icon' => 'shield'];
+                        $links[] = ['route' => 'admin.audit', 'label' => 'Audit log', 'icon' => 'shield'];
                     }
                 @endphp
                 @foreach ($links as $link)

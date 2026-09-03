@@ -11,6 +11,7 @@ class BookDetail extends Component
 
     public function mount(Book $book): void
     {
+        abort_if($book->archived_at, 404);
         $this->book = $book->load('category');
     }
 

@@ -10,7 +10,11 @@
             <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Data Pengunjung</h1>
             <p class="mt-1 text-sm text-slate-500">Rekapitulasi dan riwayat kunjungan tamu umum serta pegawai Kejaksaan.</p>
         </div>
-        <div>
+        <div class="flex flex-wrap gap-2">
+            <button wire:click="exportPdf"
+                class="inline-flex items-center justify-center rounded-xl border border-kejati/30 bg-white px-4 py-2.5 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50">
+                Export PDF
+            </button>
             <button wire:click="exportCsv"
                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-kejati px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-kejati-dark">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

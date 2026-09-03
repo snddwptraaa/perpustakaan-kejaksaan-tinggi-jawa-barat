@@ -19,6 +19,10 @@
                 </svg>
                 Export CSV
             </button>
+            <button wire:click="exportXlsx" type="button"
+                class="inline-flex items-center justify-center rounded-xl border border-kejati/30 bg-white px-4 py-3 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50">
+                Export XLSX
+            </button>
             <button wire:click="create"
                 type="button"
                 class="inline-flex items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark">
@@ -90,9 +94,11 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-bold text-slate-900" id="modal-loan-title">
-                                Catat Peminjaman Buku Baru
+                                {{ $editingId ? 'Koreksi Data Peminjaman' : 'Catat Peminjaman Buku Baru' }}
                             </h3>
-                            <p class="text-xs text-slate-500">Stok eksemplar buku fisik akan otomatis berkurang setelah dicatat.</p>
+                            <p class="text-xs text-slate-500">
+                                {{ $editingId ? 'Buku tidak dapat diganti agar perhitungan stok tetap konsisten.' : 'Stok eksemplar buku fisik akan otomatis berkurang setelah dicatat.' }}
+                            </p>
                         </div>
                     </div>
                     <button wire:click="resetForm"
@@ -146,14 +152,16 @@
                                             @endif
                                         </div>
                                     </div>
-                                    <button wire:click="deselectBook"
-                                        type="button"
-                                        class="inline-flex items-center gap-1 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-stone-50 hover:text-rose-600 transition">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                        </svg>
-                                        Ganti Buku
-                                    </button>
+                                    @unless ($editingId)
+                                        <button wire:click="deselectBook"
+                                            type="button"
+                                            class="inline-flex items-center gap-1 rounded-xl border border-stone-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-stone-50 hover:text-rose-600 transition">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            Ganti Buku
+                                        </button>
+                                    @endunless
                                 </div>
                             </div>
                         @else
@@ -235,6 +243,16 @@
                         </h4>
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div class="sm:col-span-2">
+                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Anggota terdaftar (opsional)</label>
+                                <select wire:model.live="member_id" class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati">
+                                    <option value="">Peminjam manual / bukan anggota</option>
+                                    @foreach ($members as $member)
+                                        <option value="{{ $member->id }}">{{ $member->nama }}{{ $member->nip ? ' — '.$member->nip : '' }}</option>
+                                    @endforeach
+                                </select>
+                                <x-input-error :messages="$errors->get('member_id')" class="mt-1.5" />
+                            </div>
                             <!-- Nama Peminjam -->
                             <div class="sm:col-span-2">
                                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
@@ -330,7 +348,7 @@
                             wire:loading.attr="disabled"
                             class="inline-flex items-center gap-2 rounded-xl bg-kejati px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark focus:outline-none disabled:opacity-50">
                             <span wire:loading wire:target="save" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                            Simpan Transaksi Peminjaman
+                            {{ $editingId ? 'Simpan Koreksi' : 'Simpan Transaksi Peminjaman' }}
                         </button>
                     </div>
 
@@ -362,6 +380,7 @@
                     <option value="dipinjam">Sedang Dipinjam</option>
                     <option value="terlambat">Terlambat Kembali</option>
                     <option value="dikembalikan">Sudah Dikembalikan</option>
+                    <option value="dibatalkan">Dibatalkan</option>
                 </select>
             </div>
         </div>
@@ -399,7 +418,11 @@
                                 {{ $loan->tanggal_jatuh_tempo->format('d M Y') }}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                @if ($loan->current_status === 'dikembalikan')
+                                @if ($loan->current_status === 'dibatalkan')
+                                    <span class="inline-flex items-center rounded-full bg-stone-200 px-2.5 py-1 text-xs font-bold text-slate-700">
+                                        Dibatalkan
+                                    </span>
+                                @elseif ($loan->current_status === 'dikembalikan')
                                     <span class="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">
                                         <span class="mr-1.5 h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                                         Dikembalikan
@@ -417,7 +440,19 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
-                                @if (!$loan->tanggal_kembali)
+                                <div class="flex flex-wrap justify-end gap-1">
+                                    <button type="button" wire:click="edit({{ $loan->id }})"
+                                        class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-bold text-kejati hover:bg-emerald-50 transition">
+                                        Koreksi
+                                    </button>
+                                @if (!$loan->tanggal_kembali && !$loan->tanggal_dibatalkan)
+                                    @if ($loan->jumlah_perpanjangan < 1)
+                                        <button type="button" wire:click="extendLoan({{ $loan->id }})"
+                                            wire:confirm="Perpanjang jatuh tempo peminjaman ini selama tujuh hari?"
+                                            class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-50 transition">
+                                            Perpanjang
+                                        </button>
+                                    @endif
                                     <button type="button"
                                         @click="$dispatch('open-confirm-modal', {
                                             title: 'Pengembalian Buku',
@@ -432,11 +467,27 @@
                                         </svg>
                                         Kembalikan
                                     </button>
+                                    <button type="button"
+                                        @click="$dispatch('open-confirm-modal', {
+                                            title: 'Batalkan Peminjaman',
+                                            message: 'Batalkan transaksi peminjaman buku \'{{ addslashes($loan->book->judul) }}\'? Stok buku akan dikembalikan.',
+                                            confirmButtonText: 'Ya, Batalkan',
+                                            type: 'danger',
+                                            onConfirm: () => $wire.cancel({{ $loan->id }})
+                                        })"
+                                        class="inline-flex items-center rounded-lg px-3 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition">
+                                        Batalkan
+                                    </button>
+                                @elseif ($loan->tanggal_dibatalkan)
+                                    <span class="px-2 py-1.5 text-xs text-slate-400 font-mono">
+                                        {{ $loan->tanggal_dibatalkan->format('d M Y') }}
+                                    </span>
                                 @else
                                     <span class="text-xs text-slate-400 font-mono">
                                         Kembali {{ $loan->tanggal_kembali->format('d M Y') }}
                                     </span>
                                 @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

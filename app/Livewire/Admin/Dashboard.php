@@ -12,7 +12,7 @@ class Dashboard extends Component
     public function render()
     {
         return view('livewire.admin.dashboard', [
-            'totalBooks' => Book::count(),
+            'totalBooks' => Book::active()->count(),
             'totalCopies' => Book::sum('stok'),
             'availableCopies' => Book::sum('stok_tersedia'),
             'activeLoans' => Loan::active()->count(),

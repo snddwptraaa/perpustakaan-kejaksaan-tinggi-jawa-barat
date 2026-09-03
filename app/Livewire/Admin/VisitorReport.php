@@ -3,9 +3,11 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Visitor;
+use App\Services\XlsxReportWriter;
 use App\Support\Csv;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class VisitorReport extends Component
@@ -60,6 +62,27 @@ class VisitorReport extends Component
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
+    public function exportXlsx(): BinaryFileResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        return app(XlsxReportWriter::class)->download(
+            'laporan-pengunjung-'.now()->format('Y-m-d_H-i-s').'.xlsx',
+            ['Kategori', 'Nama', 'NIP / NRP', 'Instansi / Unit', 'Kontak', 'Keperluan', 'Waktu Kunjungan'],
+            function (callable $appendRow): void {
+                $this->filteredVisitorsQuery()->orderByDesc('id')->chunkByIdDesc(500, function ($visitors) use ($appendRow): void {
+                    foreach ($visitors as $visitor) {
+                        $appendRow([
+                            $visitor->kategori === 'pegawai' ? 'Pegawai Kejaksaan' : 'Tamu / Umum',
+                            $visitor->nama, $visitor->nip ?? '', $visitor->instansi_unit,
+                            $visitor->no_hp ?? '', $visitor->keperluan, $visitor->created_at->format('Y-m-d H:i:s'),
+                        ]);
+                    }
+                });
+            }
+        );
+    }
+
     private function filteredVisitorsQuery()
     {
         return Visitor::query()
@@ -81,5 +104,22 @@ class VisitorReport extends Component
             'totalPegawai' => Visitor::where('kategori', 'pegawai')->count(),
             'totalUmum' => Visitor::where('kategori', 'umum')->orWhereNull('kategori')->count(),
         ])->layout('layouts.admin', ['title' => 'Pengunjung']);
+    }
+
+    public function exportPdf(): \Symfony\Component\HttpFoundation\Response
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $filename = 'laporan-pengunjung-'.now()->format('Y-m-d_H-i-s').'.pdf';
+
+        $visitors = $this->filteredVisitorsQuery()->orderByDesc('id')->get();
+        
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.visitors-pdf', [
+            'visitors' => $visitors,
+            'from' => null,
+            'to' => null,
+        ])
+        ->setPaper('a4', 'landscape')
+        ->download($filename);
     }
 }

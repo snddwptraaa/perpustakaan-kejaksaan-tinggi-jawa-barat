@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ class Book extends Model
 
     protected $fillable = [
         'category_id', 'judul', 'penulis', 'penerbit', 'tahun_terbit', 'jumlah_halaman', 'isbn',
-        'no_klasifikasi', 'lokasi_rak', 'stok', 'stok_tersedia', 'cover_image', 'deskripsi',
+        'no_klasifikasi', 'lokasi_rak', 'stok', 'stok_tersedia', 'cover_image', 'archived_at', 'deskripsi',
     ];
 
     protected function casts(): array
@@ -23,6 +24,7 @@ class Book extends Model
             'tahun_terbit' => 'integer',
             'stok' => 'integer',
             'stok_tersedia' => 'integer',
+            'archived_at' => 'datetime',
         ];
     }
 
@@ -47,6 +49,16 @@ class Book extends Model
     public function loans(): HasMany
     {
         return $this->hasMany(Loan::class);
+    }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->whereNull('archived_at');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->whereNotNull('archived_at');
     }
 
     public function getIsAvailableAttribute(): bool

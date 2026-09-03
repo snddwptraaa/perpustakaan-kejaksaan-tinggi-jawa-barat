@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +13,10 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $attributes = [
+        'aktif' => true,
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -24,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'aktif',
     ];
 
     /**
@@ -46,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'aktif' => 'boolean',
         ];
     }
 
@@ -62,5 +67,15 @@ class User extends Authenticatable
     public function loans(): HasMany
     {
         return $this->hasMany(Loan::class, 'petugas_id');
+    }
+
+    public function cancelledLoans(): HasMany
+    {
+        return $this->hasMany(Loan::class, 'petugas_pembatal_id');
+    }
+
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
     }
 }

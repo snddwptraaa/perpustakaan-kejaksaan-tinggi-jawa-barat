@@ -4,6 +4,8 @@ namespace App\Livewire\Admin;
 
 use App\Models\Book;
 use App\Models\Category;
+use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -65,7 +67,7 @@ class BookManager extends Component
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
-            'judul' => ['required', 'string', 'max:255'],
+            'judul' => ['required', 'string', 'max:500'],
             'penulis' => ['required', 'string', 'max:255'],
             'penerbit' => ['nullable', 'string', 'max:255'],
             'tahun_terbit' => ['nullable', 'integer', 'between:1000,2100'],
@@ -223,13 +225,16 @@ class BookManager extends Component
                     }
 
                     $data['stok_tersedia'] = $data['stok'] - $activeLoans;
+                    $before = $book->toArray();
                     $book->update($data);
+                    app(AuditLogger::class)->model('ubah', $book, $before, $book->fresh()->toArray());
 
                     return;
                 }
 
                 $data['stok_tersedia'] = $data['stok'];
-                Book::create($data);
+                $book = Book::create($data);
+                app(AuditLogger::class)->model('buat', $book, null, $book->toArray());
             });
         } catch (Throwable $exception) {
             if ($newCover) {
@@ -248,6 +253,23 @@ class BookManager extends Component
             : 'Buku baru berhasil ditambahkan ke katalog.');
 
         $this->resetForm();
+        Cache::forget('books:options');
+    }
+
+    public function toggleArchive(int $id): void
+    {
+        $book = Book::findOrFail($id);
+        if (! $book->archived_at && $book->loans()->active()->exists()) {
+            session()->flash('error', 'Buku dengan peminjaman aktif tidak dapat diarsipkan.');
+
+            return;
+        }
+
+        $before = $book->toArray();
+        $book->update(['archived_at' => $book->archived_at ? null : now()]);
+        app(AuditLogger::class)->model($book->archived_at ? 'arsipkan' : 'pulihkan', $book, $before, $book->fresh()->toArray());
+        Cache::forget('books:options');
+        session()->flash('success', $book->archived_at ? 'Buku diarsipkan dari katalog publik.' : 'Buku dikembalikan ke katalog publik.');
     }
 
     public function delete(int $id): void
@@ -261,7 +283,7 @@ class BookManager extends Component
         }
 
         $coverToDelete = $book->cover_image;
-
+        app(AuditLogger::class)->model('hapus', $book, $book->toArray());
         $book->delete();
 
         if ($coverToDelete) {
@@ -269,6 +291,7 @@ class BookManager extends Component
         }
 
         session()->flash('success', 'Buku berhasil dihapus dari katalog.');
+        Cache::forget('books:options');
     }
 
     public function resetForm(): void

@@ -5,6 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Livewire\Admin\UserManager;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -80,6 +81,46 @@ class UserManagerTest extends TestCase
             ->assertHasErrors(['name', 'email', 'password']);
     }
 
+    public function test_superadmin_can_edit_user_and_optionally_reset_password(): void
+    {
+        $targetUser = User::factory()->create([
+            'name' => 'Nama Lama',
+            'email' => 'lama@kejati.test',
+            'role' => 'admin',
+        ]);
+
+        Livewire::actingAs($this->superadmin)
+            ->test(UserManager::class)
+            ->call('edit', $targetUser->id)
+            ->set('name', 'Nama Baru')
+            ->set('email', 'baru@kejati.test')
+            ->set('role', 'superadmin')
+            ->set('password', 'password-baru')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $targetUser->refresh();
+        $this->assertSame('Nama Baru', $targetUser->name);
+        $this->assertSame('baru@kejati.test', $targetUser->email);
+        $this->assertSame('superadmin', $targetUser->role);
+        $this->assertTrue(Hash::check('password-baru', $targetUser->password));
+    }
+
+    public function test_editing_user_without_password_keeps_existing_password(): void
+    {
+        $targetUser = User::factory()->create();
+        $password = $targetUser->password;
+
+        Livewire::actingAs($this->superadmin)
+            ->test(UserManager::class)
+            ->call('edit', $targetUser->id)
+            ->set('name', 'Nama Dikoreksi')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame($password, $targetUser->fresh()->password);
+    }
+
     public function test_can_search_users(): void
     {
         $user1 = User::factory()->create(['name' => 'Budi Sudarsono', 'email' => 'budi@test.com']);
@@ -119,7 +160,7 @@ class UserManagerTest extends TestCase
         Livewire::actingAs($otherAdmin)
             ->test(UserManager::class)
             ->call('delete', $this->superadmin->id)
-            ->assertSessionHas('error', 'Hanya superadmin yang dapat menghapus akun lain.');
+            ->assertSee('Hanya superadmin yang dapat menghapus akun lain.');
 
         $this->assertDatabaseHas('users', ['id' => $this->superadmin->id]);
     }

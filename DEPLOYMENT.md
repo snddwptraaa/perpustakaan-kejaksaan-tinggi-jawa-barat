@@ -24,3 +24,10 @@
 Use an atomic release directory or immutable image. Keep the previous application release and a database backup made before migration. File and database backups must be encrypted, access controlled, retained according to policy, and restored in a non-production environment as a regular drill.
 
 The visitor pruning schedule is disabled when `VISITOR_RETENTION_DAYS=0`. Only enable it after the organization approves the retention duration and a backup/restore process exists.
+
+## Accepted risks and policy decisions
+
+- The Content Security Policy currently permits `unsafe-inline` and `unsafe-eval` for scripts because the installed Alpine/Livewire frontend relies on runtime-evaluated expressions and inline bootstrapping. Blade output remains escaped by default, but this CSP is defense-in-depth rather than a complete XSS boundary. Replacing it requires a tested nonce/hash migration for all framework-generated scripts.
+- `VISITOR_RETENTION_DAYS=0` means visitor personal data is retained indefinitely. This is a policy default, not a recommended retention period. Production owners must approve a finite duration or explicitly accept indefinite retention, and record that decision outside the application repository.
+
+At larger data volumes, review the substring searches on borrower and visitor names. Queries using `LIKE '%term%'` cannot use ordinary B-tree indexes efficiently; use an appropriate full-text/search strategy before these tables reach operationally significant size.

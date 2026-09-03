@@ -93,7 +93,10 @@ class BookManagerTest extends TestCase
     {
         Storage::fake('public');
 
-        $file = UploadedFile::fake()->image('cover_buku.jpg', 300, 400);
+        $file = UploadedFile::fake()->createWithContent(
+            'cover_buku.png',
+            base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', true)
+        );
 
         Livewire::actingAs($this->admin)
             ->test(BookManager::class)
@@ -156,6 +159,26 @@ class BookManagerTest extends TestCase
             ->assertHasErrors(['category_id', 'judul', 'penulis', 'stok', 'stok_tersedia']);
     }
 
+    public function test_admin_can_edit_imported_book_with_long_title(): void
+    {
+        $book = Book::create([
+            'category_id' => $this->category->id,
+            'judul' => str_repeat('Judul panjang ', 30),
+            'penulis' => 'Penulis',
+            'stok' => 1,
+            'stok_tersedia' => 1,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('edit', $book->id)
+            ->set('lokasi_rak', 'Rak A1')
+            ->call('save')
+            ->assertHasNoErrors('judul');
+
+        $this->assertSame('Rak A1', $book->fresh()->lokasi_rak);
+    }
+
     public function test_book_with_completed_loan_history_and_cover_cannot_be_deleted(): void
     {
         Storage::fake('public');
@@ -181,7 +204,7 @@ class BookManagerTest extends TestCase
         Livewire::actingAs($this->admin)
             ->test(BookManager::class)
             ->call('delete', $book->id)
-            ->assertSessionHas('error');
+            ->assertSee('tidak dapat dihapus');
 
         $this->assertDatabaseHas('books', ['id' => $book->id]);
         Storage::disk('public')->assertExists('covers/history.jpg');

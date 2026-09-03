@@ -23,7 +23,7 @@ class DeleteUser
                 ->lockForUpdate()
                 ->pluck('id');
 
-            $user = User::query()->withCount('loans')->lockForUpdate()->findOrFail($userId);
+            $user = User::query()->withCount(['loans', 'cancelledLoans'])->lockForUpdate()->findOrFail($userId);
 
             if ($authenticatedUserId !== null && $user->id === $authenticatedUserId) {
                 return 'Akun yang sedang digunakan tidak dapat dihapus dari halaman manajemen pengguna.';
@@ -33,7 +33,7 @@ class DeleteUser
                 return 'Superadmin terakhir tidak dapat dihapus.';
             }
 
-            if ($user->loans_count > 0) {
+            if ($user->loans_count > 0 || $user->cancelled_loans_count > 0) {
                 return 'Akun tidak dapat dihapus karena memiliki riwayat transaksi peminjaman.';
             }
 
