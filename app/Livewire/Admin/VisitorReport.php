@@ -18,6 +18,10 @@ class VisitorReport extends Component
 
     public string $date = '';
 
+    public string $startDate = '';
+
+    public string $endDate = '';
+
     public string $kategori = ''; // '' (Semua), 'umum', 'pegawai'
 
     public function updatedSearch(): void
@@ -27,6 +31,24 @@ class VisitorReport extends Component
 
     public function updatedDate(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetDateRange(): void
+    {
+        $this->startDate = '';
+        $this->endDate = '';
+        $this->date = '';
         $this->resetPage();
     }
 
@@ -91,7 +113,9 @@ class VisitorReport extends Component
                 ->orWhere('instansi_unit', 'like', "%{$this->search}%")
                 ->orWhere('nip', 'like', "%{$this->search}%")))
             ->when($this->kategori, fn ($query) => $query->where('kategori', $this->kategori))
-            ->when($this->date, fn ($query) => $query->whereDate('created_at', $this->date));
+            ->when($this->startDate, fn ($query) => $query->whereDate('created_at', '>=', $this->startDate))
+            ->when($this->endDate, fn ($query) => $query->whereDate('created_at', '<=', $this->endDate))
+            ->when($this->date && ! $this->startDate && ! $this->endDate, fn ($query) => $query->whereDate('created_at', $this->date));
     }
 
     public function render()
@@ -106,20 +130,35 @@ class VisitorReport extends Component
         ])->layout('layouts.admin', ['title' => 'Pengunjung']);
     }
 
-    public function exportPdf(): \Symfony\Component\HttpFoundation\Response
+    public function exportPdf(): StreamedResponse
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
-        $filename = 'laporan-pengunjung-'.now()->format('Y-m-d_H-i-s').'.pdf';
+        $from = $this->startDate ?: ($this->date ?: null);
+        $to = $this->endDate ?: ($this->date ?: null);
+
+        $suffix = '';
+        if ($from && $to) {
+            $suffix = "-{$from}-sd-{$to}";
+        } elseif ($from) {
+            $suffix = "-sejak-{$from}";
+        } elseif ($to) {
+            $suffix = "-sampai-{$to}";
+        }
+
+        $filename = 'laporan-pengunjung'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.pdf';
 
         $visitors = $this->filteredVisitorsQuery()->orderByDesc('id')->get();
         
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.visitors-pdf', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.visitors-pdf', [
             'visitors' => $visitors,
-            'from' => null,
-            'to' => null,
+            'from' => $from,
+            'to' => $to,
         ])
-        ->setPaper('a4', 'landscape')
-        ->download($filename);
+        ->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf): void {
+            echo $pdf->output();
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 }

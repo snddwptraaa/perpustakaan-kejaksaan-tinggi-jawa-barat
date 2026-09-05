@@ -46,6 +46,10 @@ class LoanManager extends Component
 
     public string $statusFilter = '';
 
+    public string $startDate = '';
+
+    public string $endDate = '';
+
     protected function rules(): array
     {
         return [
@@ -149,7 +153,10 @@ class LoanManager extends Component
             $before = $loan->toArray();
             unset($data['book_id']);
             $loan->update($data);
-            app(AuditLogger::class)->model('koreksi', $loan, $before, $loan->fresh()->toArray());
+            app(AuditLogger::class)->model('koreksi', $loan, $before, $loan->fresh()->toArray(), [
+                'judul_buku' => $loan->book?->judul,
+                'nama_peminjam' => $loan->nama_peminjam,
+            ]);
             session()->flash('success', 'Data peminjaman berhasil diperbarui.');
             $this->resetForm();
 
@@ -278,10 +285,38 @@ class LoanManager extends Component
         );
     }
 
+    public function updatedStartDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEndDate(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetDateRange(): void
+    {
+        $this->startDate = '';
+        $this->endDate = '';
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'statusFilter', 'startDate', 'endDate']);
+        $this->resetPage();
+    }
+
     private function filteredLoansQuery()
     {
         return Loan::query()
-            ->when($this->search, fn ($query) => $query->where('nama_peminjam', 'like', "%{$this->search}%"))
+            ->when($this->search, fn ($query) => $query->where(fn ($q) => $q
+                ->where('nama_peminjam', 'like', "%{$this->search}%")
+                ->orWhereHas('book', fn ($bq) => $bq->where('judul', 'like', "%{$this->search}%"))
+            ))
+            ->when($this->startDate, fn ($query) => $query->whereDate('tanggal_pinjam', '>=', $this->startDate))
+            ->when($this->endDate, fn ($query) => $query->whereDate('tanggal_pinjam', '<=', $this->endDate))
             ->when($this->statusFilter, function ($query): void {
                 if ($this->statusFilter === 'terlambat') {
                     $query->whereNull('tanggal_kembali')
@@ -338,21 +373,36 @@ class LoanManager extends Component
         ])->layout('layouts.admin', ['title' => 'Peminjaman']);
     }
 
-    public function exportPdf(): \Symfony\Component\HttpFoundation\Response
+    public function exportPdf(): StreamedResponse
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
-        $filename = 'laporan-peminjaman-'.now()->format('Y-m-d_H-i-s').'.pdf';
+        $from = $this->startDate ?: null;
+        $to = $this->endDate ?: null;
+
+        $suffix = '';
+        if ($from && $to) {
+            $suffix = "-{$from}-sd-{$to}";
+        } elseif ($from) {
+            $suffix = "-sejak-{$from}";
+        } elseif ($to) {
+            $suffix = "-sampai-{$to}";
+        }
+
+        $filename = 'laporan-peminjaman'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.pdf';
 
         $loans = $this->filteredLoansQuery()->with(['book', 'member'])->orderByDesc('tanggal_pinjam')->get();
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.loans-pdf', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.loans-pdf', [
             'loans' => $loans,
-            'from' => null,
-            'to' => null,
+            'from' => $from,
+            'to' => $to,
             'statusFilter' => $this->statusFilter ?: 'semua',
         ])
-        ->setPaper('a4', 'landscape')
-        ->download($filename);
+        ->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf): void {
+            echo $pdf->output();
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 }

@@ -30,7 +30,7 @@ class ExportPdfController extends Controller
             $query->where('category_id', $request->input('category'));
         }
 
-        $books = $query->with('category')->orderBy('judul')->take(100)->get();
+        $books = $query->with('category')->orderBy('judul')->take(1000)->get();
 
         $pdf = Pdf::loadView('reports.catalog-pdf', compact('books'))
             ->setPaper('a4', 'portrait');
@@ -52,14 +52,16 @@ class ExportPdfController extends Controller
             $query->whereDate('created_at', '<=', $request->input('to'));
         }
 
-        $visitors = $query->orderByDesc('created_at')->take(200)->get();
+        $visitors = $query->orderByDesc('created_at')->take(1000)->get();
         $from = $request->input('from');
         $to = $request->input('to');
+
+        $suffix = ($from && $to) ? "-{$from}-sd-{$to}" : (($from) ? "-sejak-{$from}" : (($to) ? "-sampai-{$to}" : ''));
 
         $pdf = Pdf::loadView('reports.visitors-pdf', compact('visitors', 'from', 'to'))
             ->setPaper('a4', 'landscape');
 
-        return $pdf->download('laporan-pengunjung-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->download('laporan-pengunjung'.$suffix.'-'.now()->format('Y-m-d').'.pdf');
     }
 
     /**
@@ -84,7 +86,8 @@ class ExportPdfController extends Controller
                     ->whereDate('tanggal_jatuh_tempo', '<', today());
             } elseif ($status === 'dipinjam') {
                 $query->whereNull('tanggal_kembali')
-                    ->whereNull('tanggal_dibatalkan');
+                    ->whereNull('tanggal_dibatalkan')
+                    ->whereDate('tanggal_jatuh_tempo', '>=', today());
             } elseif ($status === 'dikembalikan') {
                 $query->whereNotNull('tanggal_kembali');
             } elseif ($status === 'dibatalkan') {
@@ -92,14 +95,16 @@ class ExportPdfController extends Controller
             }
         }
 
-        $loans = $query->orderByDesc('tanggal_pinjam')->take(200)->get();
+        $loans = $query->orderByDesc('tanggal_pinjam')->take(1000)->get();
         $from = $request->input('from');
         $to = $request->input('to');
         $statusFilter = $request->input('status', 'semua');
 
+        $suffix = ($from && $to) ? "-{$from}-sd-{$to}" : (($from) ? "-sejak-{$from}" : (($to) ? "-sampai-{$to}" : ''));
+
         $pdf = Pdf::loadView('reports.loans-pdf', compact('loans', 'from', 'to', 'statusFilter'))
             ->setPaper('a4', 'landscape');
 
-        return $pdf->download('laporan-peminjaman-'.now()->format('Y-m-d').'.pdf');
+        return $pdf->download('laporan-peminjaman'.$suffix.'-'.now()->format('Y-m-d').'.pdf');
     }
 }

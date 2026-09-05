@@ -14,6 +14,7 @@ use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class BookManager extends Component
@@ -216,7 +217,7 @@ class BookManager extends Component
             DB::transaction(function () use ($data): void {
                 if ($this->editingId) {
                     $book = Book::whereKey($this->editingId)->lockForUpdate()->firstOrFail();
-                    $activeLoans = $book->loans()->whereNull('tanggal_kembali')->count();
+                    $activeLoans = $book->loans()->active()->count();
 
                     if ($data['stok'] < $activeLoans) {
                         throw ValidationException::withMessages([
@@ -292,6 +293,35 @@ class BookManager extends Component
 
         session()->flash('success', 'Buku berhasil dihapus dari katalog.');
         Cache::forget('books:options');
+    }
+
+    public function exportPdf(): StreamedResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $filename = 'katalog-buku-'.now()->format('Y-m-d_H-i-s').'.pdf';
+
+        $books = Book::active()->with('category')
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
+                    $q->where('judul', 'like', "%{$this->search}%")
+                        ->orWhere('penulis', 'like', "%{$this->search}%")
+                        ->orWhere('isbn', 'like', "%{$this->search}%")
+                        ->orWhere('no_klasifikasi', 'like', "%{$this->search}%")
+                        ->orWhere('lokasi_rak', 'like', "%{$this->search}%");
+                });
+            })
+            ->orderBy('judul')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.catalog-pdf', [
+            'books' => $books,
+        ])
+        ->setPaper('a4', 'portrait');
+
+        return response()->streamDownload(function () use ($pdf): void {
+            echo $pdf->output();
+        }, $filename, ['Content-Type' => 'application/pdf']);
     }
 
     public function resetForm(): void

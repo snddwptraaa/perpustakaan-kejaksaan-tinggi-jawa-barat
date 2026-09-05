@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Category;
+use App\Services\AuditLogger;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -75,10 +76,14 @@ class CategoryManager extends Component
         }
 
         if ($this->editingId) {
-            Category::findOrFail($this->editingId)->update($data);
+            $category = Category::findOrFail($this->editingId);
+            $before = $category->toArray();
+            $category->update($data);
+            app(AuditLogger::class)->model('ubah', $category, $before, $category->fresh()->toArray());
             session()->flash('success', 'Kategori buku berhasil diperbarui.');
         } else {
-            Category::create($data);
+            $category = Category::create($data);
+            app(AuditLogger::class)->model('buat', $category, null, $category->toArray());
             session()->flash('success', 'Kategori buku baru berhasil ditambahkan.');
         }
 
@@ -95,7 +100,9 @@ class CategoryManager extends Component
             return;
         }
 
+        $before = $category->toArray();
         $category->delete();
+        app(AuditLogger::class)->model('hapus', $category, $before, null);
         session()->flash('success', 'Kategori berhasil dihapus.');
     }
 

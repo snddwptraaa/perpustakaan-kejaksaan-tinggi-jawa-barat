@@ -173,4 +173,33 @@ class LoanManagerTest extends TestCase
         $this->assertSame('dibatalkan', $loan->current_status);
         $this->assertEquals(3, $this->book->fresh()->stok_tersedia);
     }
+
+    public function test_admin_can_filter_and_reset_loans(): void
+    {
+        Loan::create([
+            'book_id' => $this->book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Ahmad Peminjam',
+            'tanggal_pinjam' => '2026-06-01',
+            'tanggal_jatuh_tempo' => '2026-06-08',
+        ]);
+
+        Loan::create([
+            'book_id' => $this->book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Budi Peminjam',
+            'tanggal_pinjam' => '2026-07-01',
+            'tanggal_jatuh_tempo' => '2026-07-08',
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(LoanManager::class)
+            ->set('search', 'Ahmad')
+            ->assertSee('Ahmad Peminjam')
+            ->assertDontSee('Budi Peminjam')
+            ->call('resetFilters')
+            ->assertSet('search', '')
+            ->assertSee('Ahmad Peminjam')
+            ->assertSee('Budi Peminjam');
+    }
 }

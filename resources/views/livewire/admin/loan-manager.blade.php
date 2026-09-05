@@ -11,6 +11,14 @@
             <p class="mt-1 text-sm text-slate-500">Catat transaksi peminjaman fisik dan konfirmasi pengembalian buku perpustakaan.</p>
         </div>
         <div class="flex flex-wrap gap-3">
+            <button wire:click="exportPdf"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-100 hover:border-rose-300">
+                <svg class="h-4 w-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                Export PDF
+            </button>
             <button wire:click="exportCsv"
                 type="button"
                 class="inline-flex items-center justify-center gap-2 rounded-xl border border-kejati/30 bg-white px-4 py-3 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50 hover:border-kejati">
@@ -169,7 +177,7 @@
                             <div class="rounded-2xl border border-stone-200 bg-stone-50/70 p-4 space-y-3">
                                 <!-- Search Input -->
                                 <div class="relative">
-                                    <div class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                         </svg>
@@ -177,7 +185,16 @@
                                     <input wire:model.live.debounce.250ms="bookSearch"
                                         type="text"
                                         placeholder="Cari judul buku, nama pengarang, ISBN, nomor panggil DDC, atau lokasi rak..."
-                                        class="w-full rounded-xl border-stone-300 bg-white py-2.5 pl-10 pr-4 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
+                                        class="w-full rounded-xl border-stone-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
+                                    @if ($bookSearch)
+                                        <button wire:click="$set('bookSearch', '')" type="button"
+                                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition"
+                                            aria-label="Hapus kata kunci pencarian buku">
+                                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    @endif
                                 </div>
 
                                 <!-- Available Books Suggestions List / Prompt -->
@@ -360,28 +377,77 @@
 
     <!-- TABLE & LIST TRANSAKSI PEMINJAMAN -->
     <div class="mt-8 rounded-2xl border border-stone-200 bg-white shadow-sm overflow-hidden">
-        <!-- FILTER BAR -->
-        <div class="flex flex-col gap-4 border-b border-stone-100 p-4 sm:flex-row sm:items-center sm:justify-between bg-stone-50/50">
-            <div class="relative max-w-md flex-1">
-                <span class="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-slate-400">
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </span>
-                <input wire:model.live.debounce.300ms="search"
-                    type="search"
-                    placeholder="Cari nama peminjam..."
-                    class="w-full rounded-xl border-stone-200 bg-white py-2.5 pl-10 text-sm focus:border-kejati focus:ring-kejati shadow-xs placeholder:text-slate-400">
-            </div>
-            <div>
-                <select wire:model.live="statusFilter"
-                    class="rounded-xl border-stone-200 bg-white py-2.5 text-sm focus:border-kejati focus:ring-kejati shadow-xs">
-                    <option value="">Semua Status Transaksi</option>
-                    <option value="dipinjam">Sedang Dipinjam</option>
-                    <option value="terlambat">Terlambat Kembali</option>
-                    <option value="dikembalikan">Sudah Dikembalikan</option>
-                    <option value="dibatalkan">Dibatalkan</option>
-                </select>
+        <!-- FILTER & SEARCH BAR -->
+        <div class="border-b border-stone-100 bg-white p-4 sm:p-5">
+            <div class="space-y-4">
+                <!-- Baris 1: Pencarian Utama & Filter Status -->
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <!-- Input Pencarian -->
+                    <div class="relative flex-1 min-w-0">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input wire:model.live.debounce.300ms="search"
+                            type="search"
+                            placeholder="Cari nama peminjam, NIP, instansi, atau judul buku..."
+                            class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                        @if ($search)
+                            <button wire:click="$set('search', '')" type="button"
+                                class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 transition"
+                                aria-label="Hapus kata kunci pencarian">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
+
+                    <!-- Dropdown Status Transaksi -->
+                    <div class="w-full sm:w-64 shrink-0">
+                        <select wire:model.live="statusFilter"
+                            class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 px-3 text-sm text-slate-900 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                            <option value="">Semua Status Transaksi</option>
+                            <option value="dipinjam">Sedang Dipinjam</option>
+                            <option value="terlambat">Terlambat Kembali</option>
+                            <option value="dikembalikan">Sudah Dikembalikan</option>
+                            <option value="dibatalkan">Dibatalkan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Baris 2: Filter Periode Tanggal, Reset Filter & Total Info -->
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3.5 border-t border-stone-100">
+                    <div class="flex flex-wrap items-center gap-3 text-xs">
+                        <span class="font-semibold uppercase tracking-wider text-slate-500 text-[11px]">
+                            Periode Pinjam:
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <input wire:model.live="startDate" type="date"
+                                title="Dari Tanggal Pinjam"
+                                class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-800 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                            <span class="text-slate-400 font-medium">s.d.</span>
+                            <input wire:model.live="endDate" type="date"
+                                title="Sampai Tanggal Pinjam"
+                                class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-800 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                        </div>
+
+                        @if ($startDate || $endDate || $statusFilter || $search)
+                            <button wire:click="resetFilters" type="button"
+                                class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Reset Filter
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="text-xs font-medium text-slate-500">
+                        Total: <span class="font-bold text-slate-800">{{ $loans->total() }}</span> transaksi peminjaman
+                    </div>
+                </div>
             </div>
         </div>
 

@@ -10,7 +10,15 @@
             <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Koleksi Buku</h1>
             <p class="mt-1 text-sm text-slate-500">Kelola daftar buku fisik, nomor panggil rak, stok eksemplar, dan cover katalog.</p>
         </div>
-        <div>
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button wire:click="exportPdf"
+                type="button"
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-100 hover:border-rose-300">
+                <svg class="h-4 w-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span>Export PDF</span>
+            </button>
             <button wire:click="create"
                 type="button"
                 class="inline-flex items-center gap-2 rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition-all duration-150 hover:bg-kejati-dark hover:shadow-kejati/30 focus:outline-none focus:ring-2 focus:ring-kejati focus:ring-offset-2 active:scale-95">

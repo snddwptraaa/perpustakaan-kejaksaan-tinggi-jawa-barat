@@ -25,7 +25,10 @@ class CirculationService
             $loan = Loan::create([...$data, 'petugas_id' => $petugasId, 'denda' => 0, 'denda_dibayar' => 0]);
             $book->decrement('stok_tersedia');
             Cache::forget('books:options');
-            $this->auditLogger->model('pinjam', $loan, null, $loan->fresh()->toArray());
+            $this->auditLogger->model('pinjam', $loan, null, $loan->fresh()->toArray(), [
+                'judul_buku' => $book->judul,
+                'nama_peminjam' => $loan->nama_peminjam,
+            ]);
 
             return $loan;
         });
@@ -51,7 +54,11 @@ class CirculationService
             $lockedLoan->update(['tanggal_kembali' => today()]);
             $book->increment('stok_tersedia');
             Cache::forget('books:options');
-            $this->auditLogger->model('kembali', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), ['petugas_id' => $petugasId]);
+            $this->auditLogger->model('kembali', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), [
+                'petugas_id' => $petugasId,
+                'judul_buku' => $book->judul,
+                'nama_peminjam' => $lockedLoan->nama_peminjam,
+            ]);
 
             return $lockedLoan->fresh();
         });
@@ -74,7 +81,11 @@ class CirculationService
             $lockedLoan->update(['tanggal_dibatalkan' => now(), 'petugas_pembatal_id' => $petugasId]);
             $book->increment('stok_tersedia');
             Cache::forget('books:options');
-            $this->auditLogger->model('batal', $lockedLoan, $before, $lockedLoan->fresh()->toArray());
+            $this->auditLogger->model('batal', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), [
+                'petugas_id' => $petugasId,
+                'judul_buku' => $book->judul,
+                'nama_peminjam' => $lockedLoan->nama_peminjam,
+            ]);
 
             return true;
         });
@@ -97,7 +108,11 @@ class CirculationService
                 'tanggal_perpanjangan' => $today,
                 'tanggal_jatuh_tempo' => $newDueDate,
             ]);
-            $this->auditLogger->model('perpanjang', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), ['petugas_id' => $petugasId]);
+            $this->auditLogger->model('perpanjang', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), [
+                'petugas_id' => $petugasId,
+                'judul_buku' => $lockedLoan->book?->judul,
+                'nama_peminjam' => $lockedLoan->nama_peminjam,
+            ]);
 
             return $lockedLoan->fresh();
         });
