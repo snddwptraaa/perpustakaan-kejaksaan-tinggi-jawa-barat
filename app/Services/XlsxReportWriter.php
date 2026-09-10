@@ -11,8 +11,9 @@ class XlsxReportWriter
 {
     /**
      * @param  callable(callable(array<int, mixed>): void): void  $writeRows
+     * @param  array<string, string>  $meta
      */
-    public function download(string $filename, array $headings, callable $writeRows): BinaryFileResponse
+    public function download(string $filename, array $headings, callable $writeRows, ?string $title = null, array $meta = []): BinaryFileResponse
     {
         $path = tempnam(storage_path('app'), 'laporan-');
         if ($path === false) {
@@ -22,6 +23,15 @@ class XlsxReportWriter
         $writer = new Writer;
         try {
             $writer->openToFile($path);
+            if ($title !== null) {
+                $writer->addRow(Row::fromValues([$title]));
+            }
+            foreach ($meta as $key => $value) {
+                $writer->addRow(Row::fromValues([(string) $key, (string) $value]));
+            }
+            if ($title !== null || $meta !== []) {
+                $writer->addRow(Row::fromValues([]));
+            }
             $writer->addRow(Row::fromValues($headings));
             $writeRows(fn (array $values) => $writer->addRow(Row::fromValues(array_values($values))));
             $writer->close();

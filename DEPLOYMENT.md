@@ -2,7 +2,7 @@
 
 ## Minimum services
 
-- PHP 8.4 with `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `bcmath`, and `fileinfo`
+- PHP 8.4 with `pdo_mysql`, `mbstring`, `openssl`, `tokenizer`, `xml`, `xmlreader`, `ctype`, `json`, `bcmath`, `fileinfo`, `iconv`, and `zip`
 - MySQL 8.0+ or MariaDB 10.6+
 - Nginx or Apache with HTTPS
 - Cron and a process supervisor when asynchronous queues are enabled
@@ -11,23 +11,29 @@
 ## Release checklist
 
 1. Back up the database and `storage/app/public` outside the web root; test a restore periodically.
-2. Install with `composer install --no-dev --classmap-authoritative` and `npm ci && npm run build`.
-3. Configure `.env`: `APP_ENV=production`, `APP_DEBUG=false`, HTTPS `APP_URL`, database, mail, cache, session, and `VISITOR_RETENTION_DAYS` based on the approved policy.
+2. Run `composer audit --locked`, `npm audit`, and `composer check-platform-reqs --no-dev`, then install with `composer install --no-dev --classmap-authoritative` and `npm ci && npm run build`.
+3. Copy `.env.production.example` to `.env` with permission `0600`. Configure the application key, HTTPS URL, database, SMTP, cache, session, and approved visitor-retention policy using server-side secrets.
 4. Run `php artisan migrate --force` and `php artisan storage:link`.
 5. Run `php artisan optimize` and ensure `storage` plus `bootstrap/cache` are writable by the PHP user.
 6. Configure cron: `* * * * * php /path/to/artisan schedule:run`.
 7. Point the web server document root to `public/`; never expose the repository root or `.env`.
-8. Check `/up` for process liveness and `/ready` for database/storage readiness.
+8. Run `php artisan production:check`. A failed check is a deployment blocker.
+9. Check `/up` for process liveness and `/ready` for database/storage readiness.
+10. Run browser smoke tests for visitor check-in/catalog exit, admin login, book CRUD/upload, circulation, PDF/XLSX export, mobile overflow, keyboard focus, and browser-console errors.
 
 ## Rollback and backup
 
 Use an atomic release directory or immutable image. Keep the previous application release and a database backup made before migration. File and database backups must be encrypted, access controlled, retained according to policy, and restored in a non-production environment as a regular drill.
 
-The visitor pruning schedule is disabled when `VISITOR_RETENTION_DAYS=0`. Only enable it after the organization approves the retention duration and a backup/restore process exists.
+The visitor pruning schedule is disabled when `VISITOR_RETENTION_DAYS=0`. `production:check` rejects that value unless `VISITOR_INDEFINITE_RETENTION_ACCEPTED=true` records an explicit policy decision. Prefer a finite approved period and enable deletion only after a backup/restore process exists.
 
 ## Accepted risks and policy decisions
 
 - The Content Security Policy currently permits `unsafe-inline` and `unsafe-eval` for scripts because the installed Alpine/Livewire frontend relies on runtime-evaluated expressions and inline bootstrapping. Blade output remains escaped by default, but this CSP is defense-in-depth rather than a complete XSS boundary. Replacing it requires a tested nonce/hash migration for all framework-generated scripts.
-- `VISITOR_RETENTION_DAYS=0` means visitor personal data is retained indefinitely. This is a policy default, not a recommended retention period. Production owners must approve a finite duration or explicitly accept indefinite retention, and record that decision outside the application repository.
+- `VISITOR_RETENTION_DAYS=0` means visitor personal data is retained indefinitely. This is not recommended. Production owners must approve a finite duration or explicitly accept indefinite retention in writing and set `VISITOR_INDEFINITE_RETENTION_ACCEPTED=true`.
+
+## Post-deployment verification
+
+Record the release commit/tag, deployment timestamp, migration output, `production:check` output, dependency-audit results, `/up` and `/ready` responses, backup checksum, restore-drill date, and browser-smoke-test result in the deployment log. Do not store credentials or personal visitor data in that log.
 
 At larger data volumes, review the substring searches on borrower and visitor names. Queries using `LIKE '%term%'` cannot use ordinary B-tree indexes efficiently; use an appropriate full-text/search strategy before these tables reach operationally significant size.

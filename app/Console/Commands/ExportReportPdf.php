@@ -30,7 +30,7 @@ class ExportReportPdf extends Command
         $query->when($to, fn ($query) => $query->whereDate($dateColumn, '<=', $to));
 
         $rows = $query->latest()->take(200)->get();
-        
+
         $viewName = $type === 'visitors' ? 'reports.visitors-pdf' : 'reports.loans-pdf';
         $pdf = Pdf::loadView($viewName, [
             'visitors' => $type === 'visitors' ? $rows : collect(),
@@ -39,12 +39,12 @@ class ExportReportPdf extends Command
             'to' => $to,
             'statusFilter' => 'semua',
         ]);
-        
+
         $path = $this->option('path') ?: storage_path('app/reports/'.$type.'-'.now()->format('Y-m-d_H-i-s').'.pdf');
         if (! is_dir(dirname($path)) && ! mkdir(dirname($path), 0750, true) && ! is_dir(dirname($path))) {
             throw new \RuntimeException('Direktori laporan tidak dapat dibuat.');
         }
-        
+
         file_put_contents($path, $pdf->output());
 
         $this->info("Laporan PDF berhasil dibuat: {$path}");

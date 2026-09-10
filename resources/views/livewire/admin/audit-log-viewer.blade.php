@@ -2,12 +2,7 @@
     <!-- PAGE HEADER -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-md bg-kejati/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-kejati">
-                    Keamanan & Pengawasan
-                </span>
-            </div>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Audit Log Sistem</h1>
+            <h1 class="page-title mt-0">Audit log</h1>
             <p class="mt-1 text-sm text-slate-500">
                 Jejak rekam lengkap perubahan data, transaksi peminjaman, dan tindakan administratif petugas perpustakaan.
             </p>
@@ -31,7 +26,7 @@
                     <input id="audit-search"
                         wire:model.live.debounce.300ms="search"
                         type="text"
-                        placeholder="Cari petugas, aksi, entitas, ID, atau IP..."
+                        placeholder="Cari petugas, aksi, entitas, ID, atau IP…"
                         class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
                 </div>
             </div>
@@ -41,14 +36,7 @@
                 <label for="filter-entitas" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                     Entitas Target
                 </label>
-                <select id="filter-entitas"
-                    wire:model.live="filterEntitas"
-                    class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 px-3 text-sm text-slate-900 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
-                    <option value="">Semua Entitas</option>
-                    @foreach ($entitasOptions as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-custom-select id="filter-entitas" wire:model.live="filterEntitas" wire:key="audit-entitas" :options="$entitasOptions" empty-option="Semua Entitas" />
             </div>
 
             <!-- Filter Aksi -->
@@ -56,14 +44,7 @@
                 <label for="filter-aksi" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
                     Jenis Tindakan
                 </label>
-                <select id="filter-aksi"
-                    wire:model.live="filterAksi"
-                    class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 px-3 text-sm text-slate-900 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
-                    <option value="">Semua Tindakan</option>
-                    @foreach ($aksiOptions as $key => $label)
-                        <option value="{{ $key }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+                <x-custom-select id="filter-aksi" wire:model.live="filterAksi" wire:key="audit-aksi" :options="$aksiOptions" empty-option="Semua Tindakan" />
             </div>
         </div>
 
@@ -73,11 +54,11 @@
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Rentang Waktu:</span>
                 <input type="date"
                     wire:model.live="startDate"
-                    class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-900 focus:border-kejati focus:bg-white focus:ring-1 focus:ring-kejati">
+                    class="admin-date-input">
                 <span class="text-xs text-slate-400">s.d.</span>
                 <input type="date"
                     wire:model.live="endDate"
-                    class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-900 focus:border-kejati focus:bg-white focus:ring-1 focus:ring-kejati">
+                    class="admin-date-input">
             </div>
 
             @if ($search || $filterAksi || $filterEntitas || $startDate || $endDate)
@@ -231,13 +212,13 @@
 
     <!-- MODAL DETAIL PERUBAHAN AUDIT LOG -->
     @if ($showDetailModal && $selectedLog)
-        <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modal-audit-title">
+        <div x-data x-trap.inert.noscroll="true" @keydown.escape.stop="$wire.closeDetail()" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modal-audit-title">
             <!-- Backdrop -->
             <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
                 wire:click="closeDetail"></div>
 
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
-                <div class="relative w-full max-w-3xl transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all border border-stone-200/80 my-8">
+                <div class="relative my-8 w-full max-w-3xl transform overflow-hidden rounded-3xl border border-stone-200/80 bg-white text-left shadow-2xl transition">
                     <!-- Modal Header -->
                     <div class="bg-gradient-to-r from-kejati-dark to-kejati px-6 py-5 text-white">
                         <div class="flex items-start justify-between gap-4">
@@ -535,4 +516,3 @@
         </div>
     @endif
 </div>
-

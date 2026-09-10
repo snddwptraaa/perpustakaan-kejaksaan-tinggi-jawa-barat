@@ -68,15 +68,9 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Card Container -->
         <div class="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-xl shadow-kejati-dark/5">
 
-            <!-- Card Header with Logo -->
-            <div class="bg-gradient-to-br from-kejati-dark to-kejati px-8 pb-8 pt-10 text-center">
-                <div
-                    class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur">
-                    <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan"
-                        class="h-10 w-auto object-contain drop-shadow">
-                </div>
+            <div class="bg-gradient-to-br from-kejati-dark to-kejati px-8 py-8 text-center">
                 <h1 class="text-xl font-bold text-white">Buat Kata Sandi Baru</h1>
-                <p class="mt-1 text-sm text-white/70">Perpustakaan Digital Kejati Jawa Barat</p>
+                <p class="mt-1 text-sm text-white/70">Gunakan kata sandi yang kuat dan mudah Anda ingat.</p>
             </div>
 
             <!-- Card Body: Form -->

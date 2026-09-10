@@ -2,37 +2,18 @@
     <!-- Top Action Bar -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-md bg-kejati/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-kejati">
-                    Buku Tamu Digital
-                </span>
-            </div>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Data Pengunjung</h1>
+            <h1 class="page-title mt-0">Data pengunjung</h1>
             <p class="mt-1 text-sm text-slate-500">Rekapitulasi dan riwayat kunjungan tamu umum serta pegawai Kejaksaan.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <button wire:click="exportPdf" type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-2.5 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-100 hover:border-rose-300">
-                <svg class="h-4 w-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                <span>Export PDF</span>
+        <div class="relative" x-data="{ exportOpen: false }" @click.outside="exportOpen = false" @keydown.escape.window="exportOpen = false">
+            <button type="button" class="btn-secondary" @click="exportOpen = !exportOpen" :aria-expanded="exportOpen" aria-controls="visitor-export-menu">
+                Ekspor laporan <span aria-hidden="true">⌄</span>
             </button>
-            <button wire:click="exportCsv" type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-kejati/30 bg-white px-4 py-2.5 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50">
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.5V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                </svg>
-                <span>Export CSV</span>
-            </button>
-            <button wire:click="exportXlsx" type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-kejati/30 bg-white px-4 py-2.5 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span>Export XLSX</span>
-            </button>
+            <div id="visitor-export-menu" x-cloak x-show="exportOpen" class="absolute right-0 z-30 mt-2 w-44 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl">
+                <button type="button" wire:click="exportPdf" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">PDF</button>
+                <button type="button" wire:click="exportCsv" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">CSV</button>
+                <button type="button" wire:click="exportXlsx" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">XLSX</button>
+            </div>
         </div>
     </div>
 
@@ -70,12 +51,7 @@
                 </div>
 
                 <!-- Filter Kategori -->
-                <select wire:model.live="kategori"
-                    class="rounded-xl border-stone-200 bg-stone-50 py-2.5 text-sm focus:border-kejati focus:bg-white focus:ring-kejati">
-                    <option value="">Semua Kategori</option>
-                    <option value="pegawai">Pegawai Kejaksaan</option>
-                    <option value="umum">Tamu / Umum</option>
-                </select>
+                <x-custom-select wire:model.live="kategori" wire:key="visitor-kategori" :options="['pegawai' => 'Pegawai Kejaksaan', 'umum' => 'Tamu / Umum']" empty-option="Semua Kategori" />
             </div>
 
             <!-- Filter Rentang Tanggal Kunjungan -->
@@ -84,13 +60,13 @@
                     <span>Periode:</span>
                     <input wire:model.live="startDate" type="date"
                         title="Dari Tanggal"
-                        class="rounded-xl border-stone-200 bg-stone-50 py-2 text-xs focus:border-kejati focus:bg-white focus:ring-kejati">
+                        class="admin-date-input">
                 </div>
                 <div class="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
                     <span>s.d.</span>
                     <input wire:model.live="endDate" type="date"
                         title="Sampai Tanggal"
-                        class="rounded-xl border-stone-200 bg-stone-50 py-2 text-xs focus:border-kejati focus:bg-white focus:ring-kejati">
+                        class="admin-date-input">
                 </div>
                 @if ($startDate || $endDate || $date)
                     <button wire:click="resetDateRange" type="button"

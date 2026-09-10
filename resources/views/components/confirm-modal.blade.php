@@ -28,8 +28,11 @@
 @open-confirm-modal.window="showConfirm($event.detail)"
 x-cloak
 x-show="open"
+x-trap.inert.noscroll="open"
+@keydown.escape.window="if (open) cancel()"
 class="fixed inset-0 z-[100] overflow-y-auto"
 aria-labelledby="modal-confirm-title"
+aria-describedby="modal-confirm-description"
 role="dialog"
 aria-modal="true">
 
@@ -53,7 +56,7 @@ aria-modal="true">
             x-transition:leave="ease-in duration-200"
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            class="relative w-full max-w-md transform overflow-hidden rounded-3xl bg-white p-6 sm:p-8 text-left shadow-2xl transition-all border border-stone-200/80 my-8">
+            class="relative my-8 w-full max-w-md transform overflow-hidden rounded-3xl border border-stone-200/80 bg-white p-6 text-left shadow-2xl transition sm:p-8">
             
             <div class="flex items-start gap-4">
                 <!-- Icon Badge -->
@@ -73,7 +76,7 @@ aria-modal="true">
 
                 <div class="flex-1 min-w-0">
                     <h3 class="text-lg font-bold text-slate-900 leading-snug" id="modal-confirm-title" x-text="title"></h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-500" x-text="message"></p>
+                    <p class="mt-2 text-sm leading-6 text-slate-500" id="modal-confirm-description" x-text="message"></p>
                 </div>
             </div>
 
@@ -81,13 +84,13 @@ aria-modal="true">
             <div class="mt-8 flex items-center justify-end gap-3 border-t border-stone-100 pt-5">
                 <button type="button"
                     @click="cancel"
-                    class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 hover:text-slate-900 focus:outline-none"
+                    class="rounded-xl border border-stone-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-stone-50 hover:text-slate-900 focus-visible:ring-2 focus-visible:ring-kejati focus-visible:ring-offset-2"
                     x-text="cancelButtonText">
                 </button>
                 <button type="button"
                     @click="confirm"
                     :class="type === 'danger' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : 'bg-kejati hover:bg-kejati-dark shadow-kejati/20'"
-                    class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg transition focus:outline-none"
+                    class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg transition focus-visible:ring-2 focus-visible:ring-kejati focus-visible:ring-offset-2"
                     x-text="confirmButtonText">
                 </button>
             </div>

@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Visitor;
 use App\Services\XlsxReportWriter;
 use App\Support\Csv;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -59,10 +60,18 @@ class VisitorReport extends Component
 
     public function exportCsv(): StreamedResponse
     {
-        $filename = 'laporan-pengunjung-'.now()->format('Y-m-d_H-i-s').'.csv';
+        [$from, $to, $suffix, $label] = $this->periodInfo();
+        $filename = 'laporan-pengunjung'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.csv';
+        $printedAt = now()->format('Y-m-d H:i:s');
+        $printedBy = auth()->user()?->name ?? 'Sistem';
 
-        return response()->streamDownload(function (): void {
+        return response()->streamDownload(function () use ($label, $printedAt, $printedBy): void {
             $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Laporan Pengunjung']);
+            fputcsv($handle, ['Periode', $label]);
+            fputcsv($handle, ['Dicetak pada', $printedAt]);
+            fputcsv($handle, ['Dicetak oleh', $printedBy]);
+            fputcsv($handle, []);
             fputcsv($handle, ['Kategori', 'Nama', 'NIP / NRP', 'Instansi / Unit', 'Kontak (HP/Email)', 'Keperluan', 'Waktu Kunjungan']);
 
             $this->filteredVisitorsQuery()
@@ -88,8 +97,10 @@ class VisitorReport extends Component
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
+        [$from, $to, $suffix, $label] = $this->periodInfo();
+
         return app(XlsxReportWriter::class)->download(
-            'laporan-pengunjung-'.now()->format('Y-m-d_H-i-s').'.xlsx',
+            'laporan-pengunjung'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.xlsx',
             ['Kategori', 'Nama', 'NIP / NRP', 'Instansi / Unit', 'Kontak', 'Keperluan', 'Waktu Kunjungan'],
             function (callable $appendRow): void {
                 $this->filteredVisitorsQuery()->orderByDesc('id')->chunkByIdDesc(500, function ($visitors) use ($appendRow): void {
@@ -101,7 +112,13 @@ class VisitorReport extends Component
                         ]);
                     }
                 });
-            }
+            },
+            title: 'Laporan Pengunjung',
+            meta: [
+                'Periode' => $label,
+                'Dicetak pada' => now()->format('Y-m-d H:i:s'),
+                'Dicetak oleh' => auth()->user()?->name ?? 'Sistem',
+            ],
         );
     }
 
@@ -134,31 +151,46 @@ class VisitorReport extends Component
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
-        $from = $this->startDate ?: ($this->date ?: null);
-        $to = $this->endDate ?: ($this->date ?: null);
-
-        $suffix = '';
-        if ($from && $to) {
-            $suffix = "-{$from}-sd-{$to}";
-        } elseif ($from) {
-            $suffix = "-sejak-{$from}";
-        } elseif ($to) {
-            $suffix = "-sampai-{$to}";
-        }
-
+        [$from, $to, $suffix] = $this->periodInfo();
         $filename = 'laporan-pengunjung'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.pdf';
 
         $visitors = $this->filteredVisitorsQuery()->orderByDesc('id')->get();
-        
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.visitors-pdf', [
+
+        $pdf = Pdf::loadView('reports.visitors-pdf', [
             'visitors' => $visitors,
             'from' => $from,
             'to' => $to,
         ])
-        ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
 
         return response()->streamDownload(function () use ($pdf): void {
             echo $pdf->output();
         }, $filename, ['Content-Type' => 'application/pdf']);
+    }
+
+    /**
+     * Kembalikan [$from, $to, $suffix, $label] dari filter periode aktif.
+     *
+     * @return array{?string, ?string, string, string}
+     */
+    private function periodInfo(): array
+    {
+        $from = $this->startDate ?: ($this->date ?: null);
+        $to = $this->endDate ?: ($this->date ?: null);
+
+        if ($from && $to && $from === $to) {
+            return [$from, $to, "-{$from}", "Tanggal {$from}"];
+        }
+        if ($from && $to) {
+            return [$from, $to, "-{$from}-sd-{$to}", "{$from} s/d {$to}"];
+        }
+        if ($from) {
+            return [$from, $to, "-sejak-{$from}", "Sejak {$from}"];
+        }
+        if ($to) {
+            return [$from, $to, "-sampai-{$to}", "Sampai {$to}"];
+        }
+
+        return [null, null, '', 'Semua periode'];
     }
 }

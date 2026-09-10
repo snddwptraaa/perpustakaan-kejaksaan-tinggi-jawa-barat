@@ -2,22 +2,17 @@
     <!-- Top Action Bar -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-md bg-kejati/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-kejati">
-                    Akses Sistem & Keamanan
-                </span>
-            </div>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Pengguna Admin</h1>
+            <h1 class="page-title mt-0">Pengguna admin</h1>
             <p class="mt-1 text-sm text-slate-500">Kelola akun petugas dan hak akses untuk panel administrasi perpustakaan.</p>
         </div>
         <div>
             <button wire:click="create"
                 type="button"
-                class="inline-flex items-center gap-2 rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition-all duration-150 hover:bg-kejati-dark hover:shadow-kejati/30 focus:outline-none focus:ring-2 focus:ring-kejati focus:ring-offset-2 active:scale-95">
+                class="btn-primary">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                 </svg>
-                <span>Tambah Pengguna Baru</span>
+                <span>Tambah pengguna</span>
             </button>
         </div>
     </div>
@@ -54,7 +49,7 @@
                     </div>
                     <input wire:model.live.debounce.300ms="search"
                         type="search"
-                        placeholder="Cari nama atau email petugas..."
+                        placeholder="Cari nama atau email petugas…"
                         class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 pl-10 pr-4 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
                 </div>
                 <div class="text-xs font-medium text-slate-500">
@@ -162,28 +157,22 @@
 
     <!-- MODAL POPUP FORM PENGGUNA (CARD MODAL) -->
     @if ($showForm)
-        <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-user-title" role="dialog" aria-modal="true">
+        <div x-data x-trap.inert.noscroll="true" @keydown.escape.stop="$wire.resetForm()" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-user-title" role="dialog" aria-modal="true">
             <!-- Background Backdrop with Blur -->
             <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
                 wire:click="resetForm"></div>
 
             <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
                 <!-- Modal Card Container -->
-                <div class="relative w-full max-w-lg transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all border border-stone-200/80 my-8">
+                <div class="relative my-8 w-full max-w-lg transform overflow-hidden rounded-3xl border border-stone-200/80 bg-white text-left shadow-2xl transition">
                     
                     <!-- Header -->
-                    <div class="bg-gradient-to-r from-kejati-dark to-kejati px-6 py-5 text-white">
+                    <div class="bg-kejati-dark px-6 py-5 text-white">
                         <div class="flex items-center justify-between">
                             <div>
-                                <span class="inline-flex items-center rounded-md bg-kejati-gold/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-kejati-gold">
-                                    {{ $editingId ? 'Edit Akun' : 'Akun Baru' }}
-                                </span>
-                                <h3 class="mt-1.5 text-xl font-bold text-white" id="modal-user-title">
-                                    {{ $editingId ? 'Edit Pengguna Admin' : 'Tambah Pengguna Admin' }}
+                                <h3 class="text-xl font-bold text-white" id="modal-user-title">
+                                    {{ $editingId ? 'Edit pengguna' : 'Tambah pengguna' }}
                                 </h3>
-                                <p class="text-xs text-white/80 mt-0.5">
-                                    {{ $editingId ? 'Perbarui identitas, peran, atau kata sandi petugas.' : 'Buat kredensial akun baru untuk petugas perpustakaan.' }}
-                                </p>
                             </div>
                             <button wire:click="resetForm"
                                 type="button"
@@ -201,10 +190,10 @@
                         <div class="p-6 space-y-4">
                             <!-- Nama -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="admin-user-name" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Nama Lengkap <span class="text-rose-600">*</span>
                                 </label>
-                                <input wire:model="name"
+                                <input id="admin-user-name" wire:model="name"
                                     type="text"
                                     placeholder="Contoh: Ahmad Fauzi, S.H."
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -213,10 +202,10 @@
 
                             <!-- Email -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="admin-user-email" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Alamat Email <span class="text-rose-600">*</span>
                                 </label>
-                                <input wire:model="email"
+                                <input id="admin-user-email" wire:model="email"
                                     type="email"
                                     placeholder="Contoh: ahmad.fauzi@kejati-jabar.go.id"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -225,10 +214,10 @@
 
                             <!-- Password -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="admin-user-password" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Kata Sandi (Password) @unless ($editingId)<span class="text-rose-600">*</span>@endunless
                                 </label>
-                                <input wire:model="password"
+                                <input id="admin-user-password" wire:model="password"
                                     type="password"
                                     placeholder="{{ $editingId ? 'Kosongkan jika tidak ingin mengganti' : 'Minimal 8 karakter' }}"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -237,14 +226,10 @@
 
                             <!-- Peran -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="admin-user-role" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Peran & Hak Akses <span class="text-rose-600">*</span>
                                 </label>
-                                <select wire:model="role" @disabled($editingId === auth()->id())
-                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm">
-                                    <option value="admin">Petugas Admin (Sirkulasi, Katalog, Pengunjung)</option>
-                                    <option value="superadmin">Superadmin (Akses Penuh Seluruh Sistem)</option>
-                                </select>
+                                <x-custom-select id="admin-user-role" wire:model="role" wire:key="user-role" :options="['admin' => 'Petugas Admin (Sirkulasi, Katalog, Pengunjung)', 'superadmin' => 'Superadmin (Akses Penuh Seluruh Sistem)']" placeholder="Pilih peran" :disabled="$editingId === auth()->id()" />
                                 <x-input-error :messages="$errors->get('role')" class="mt-1.5" />
                                 @if ($editingId === auth()->id())
                                     <p class="mt-1.5 text-xs text-slate-500">Peran akun yang sedang aktif tidak dapat diubah.</p>

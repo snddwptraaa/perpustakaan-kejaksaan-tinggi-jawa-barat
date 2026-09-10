@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use InvalidArgumentException;
 
 class Book extends Model
 {
@@ -32,11 +32,11 @@ class Book extends Model
     {
         static::saving(function (Book $book): void {
             if ($book->stok_tersedia > $book->stok) {
-                throw new InvalidArgumentException('Stok tersedia tidak boleh melebihi total stok.');
+                throw new DomainException('Stok tersedia tidak boleh melebihi total stok.');
             }
 
             if ($book->stok_tersedia < 0) {
-                throw new InvalidArgumentException('Stok tersedia tidak boleh kurang dari nol.');
+                throw new DomainException('Stok tersedia tidak boleh kurang dari nol.');
             }
         });
     }

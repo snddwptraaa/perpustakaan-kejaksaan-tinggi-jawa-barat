@@ -131,7 +131,7 @@ class UserManager extends Component
                 });
             })
             ->latest()
-            ->paginate(10);
+            ->paginate(15);
 
         return view('livewire.admin.user-manager', [
             'users' => $users,

@@ -2,43 +2,28 @@
     <!-- PAGE HEADER -->
     <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center rounded-md bg-kejati/10 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider text-kejati">
-                    Sirkulasi & Layanan Fisik
-                </span>
-            </div>
-            <h1 class="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Peminjaman Buku</h1>
+            <h1 class="page-title mt-0">Peminjaman buku</h1>
             <p class="mt-1 text-sm text-slate-500">Catat transaksi peminjaman fisik dan konfirmasi pengembalian buku perpustakaan.</p>
         </div>
-        <div class="flex flex-wrap gap-3">
-            <button wire:click="exportPdf"
-                type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/70 px-4 py-3 text-sm font-bold text-rose-700 shadow-sm transition hover:bg-rose-100 hover:border-rose-300">
-                <svg class="h-4 w-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
-                Export PDF
-            </button>
-            <button wire:click="exportCsv"
-                type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl border border-kejati/30 bg-white px-4 py-3 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50 hover:border-kejati">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                Export CSV
-            </button>
-            <button wire:click="exportXlsx" type="button"
-                class="inline-flex items-center justify-center rounded-xl border border-kejati/30 bg-white px-4 py-3 text-sm font-bold text-kejati shadow-sm transition hover:bg-emerald-50">
-                Export XLSX
-            </button>
+        <div class="flex flex-wrap gap-2" x-data="{ exportOpen: false }" @click.outside="exportOpen = false" @keydown.escape.window="exportOpen = false">
             <button wire:click="create"
                 type="button"
-                class="inline-flex items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-3 text-sm font-bold text-white shadow-lg shadow-kejati/20 transition hover:bg-kejati-dark">
+                class="btn-primary">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 Catat Peminjaman
             </button>
+            <div class="relative">
+                <button type="button" class="btn-secondary" @click="exportOpen = !exportOpen" :aria-expanded="exportOpen" aria-controls="loan-export-menu">
+                    Ekspor <span aria-hidden="true">⌄</span>
+                </button>
+                <div id="loan-export-menu" x-cloak x-show="exportOpen" class="absolute right-0 z-30 mt-2 w-40 overflow-hidden rounded-xl border border-stone-200 bg-white p-1 shadow-xl">
+                    <button type="button" wire:click="exportPdf" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">PDF</button>
+                    <button type="button" wire:click="exportCsv" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">CSV</button>
+                    <button type="button" wire:click="exportXlsx" @click="exportOpen = false" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-stone-100">XLSX</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -65,6 +50,8 @@
     <div x-data="{ show: @entangle('showForm') }"
         x-cloak
         x-show="show"
+        x-trap.inert.noscroll="show"
+        @keydown.escape.stop="$wire.resetForm()"
         class="fixed inset-0 z-50 overflow-y-auto"
         aria-labelledby="modal-loan-title"
         role="dialog"
@@ -90,19 +77,14 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative w-full max-w-3xl transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all border border-stone-200 my-8">
+                class="relative my-8 w-full max-w-3xl transform overflow-hidden rounded-3xl border border-stone-200 bg-white text-left shadow-2xl transition">
 
                 <!-- MODAL HEADER -->
-                <div class="flex items-center justify-between border-b border-stone-200/80 bg-gradient-to-r from-stone-50 via-white to-stone-50 px-6 py-5 sm:px-8">
+                <div class="flex items-center justify-between border-b border-stone-200 bg-white px-6 py-5 sm:px-8">
                     <div class="flex items-center gap-3">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-kejati text-white shadow-md shadow-kejati/20">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </div>
                         <div>
                             <h3 class="text-lg font-bold text-slate-900" id="modal-loan-title">
-                                {{ $editingId ? 'Koreksi Data Peminjaman' : 'Catat Peminjaman Buku Baru' }}
+                                {{ $editingId ? 'Koreksi peminjaman' : 'Catat peminjaman' }}
                             </h3>
                             <p class="text-xs text-slate-500">
                                 {{ $editingId ? 'Buku tidak dapat diganti agar perhitungan stok tetap konsisten.' : 'Stok eksemplar buku fisik akan otomatis berkurang setelah dicatat.' }}
@@ -124,7 +106,7 @@
 
                     <!-- 1. SECTION: PEMILIHAN BUKU (SEARCHABLE SELECTION) -->
                     <div class="space-y-3">
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                        <label for="loan-book-search" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                             Buku yang Dipinjam <span class="text-rose-600">*</span>
                         </label>
 
@@ -183,8 +165,10 @@
                                         </svg>
                                     </div>
                                     <input wire:model.live.debounce.250ms="bookSearch"
+                                        id="loan-book-search"
+                                        name="book_search"
                                         type="text"
-                                        placeholder="Cari judul buku, nama pengarang, ISBN, nomor panggil DDC, atau lokasi rak..."
+                                        placeholder="Cari judul buku, nama pengarang, ISBN, nomor panggil DDC, atau lokasi rak…"
                                         class="w-full rounded-xl border-stone-300 bg-white py-2.5 pl-10 pr-10 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
                                     @if ($bookSearch)
                                         <button wire:click="$set('bookSearch', '')" type="button"
@@ -261,21 +245,18 @@
 
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">Anggota terdaftar (opsional)</label>
-                                <select wire:model.live="member_id" class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati">
-                                    <option value="">Peminjam manual / bukan anggota</option>
-                                    @foreach ($members as $member)
-                                        <option value="{{ $member->id }}">{{ $member->nama }}{{ $member->nip ? ' — '.$member->nip : '' }}</option>
-                                    @endforeach
-                                </select>
+                                <label for="loan-member" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Anggota terdaftar (opsional)</label>
+                                <x-custom-select wire:model.live="member_id" id="loan-member" wire:key="loan-member" :options="$members" empty-option="Peminjam manual / bukan anggota" />
                                 <x-input-error :messages="$errors->get('member_id')" class="mt-1.5" />
                             </div>
                             <!-- Nama Peminjam -->
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-borrower-name" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Nama Lengkap Peminjam <span class="text-rose-600">*</span>
                                 </label>
                                 <input wire:model="nama_peminjam"
+                                    id="loan-borrower-name"
+                                    name="nama_peminjam"
                                     type="text"
                                     placeholder="Contoh: Budi Santoso, S.H."
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -284,10 +265,12 @@
 
                             <!-- NIP / No. Identitas -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-borrower-nip" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     NIP / NRP Pegawai
                                 </label>
                                 <input wire:model="nip_peminjam"
+                                    id="loan-borrower-nip"
+                                    name="nip_peminjam"
                                     type="text"
                                     placeholder="Contoh: 19850115 201001 1 002"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -296,10 +279,12 @@
 
                             <!-- Instansi / Unit Kerja -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-borrower-unit" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Instansi / Bidang Kerja
                                 </label>
                                 <input wire:model="instansi_unit"
+                                    id="loan-borrower-unit"
+                                    name="instansi_unit"
                                     type="text"
                                     placeholder="Contoh: Bidang Tindak Pidana Umum"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400">
@@ -320,34 +305,40 @@
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <!-- Tanggal Pinjam -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-start-date" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Tanggal Pinjam <span class="text-rose-600">*</span>
                                 </label>
                                 <input wire:model.live="tanggal_pinjam"
+                                    id="loan-start-date"
+                                    name="tanggal_pinjam"
                                     type="date"
-                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm">
+                                    class="admin-date-input mt-1.5 w-full">
                                 <x-input-error :messages="$errors->get('tanggal_pinjam')" class="mt-1.5" />
                             </div>
 
                             <!-- Tanggal Jatuh Tempo -->
                             <div>
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-due-date" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Tanggal Jatuh Tempo (Batas Kembali) <span class="text-rose-600">*</span>
                                 </label>
                                 <input wire:model="tanggal_jatuh_tempo"
+                                    id="loan-due-date"
+                                    name="tanggal_jatuh_tempo"
                                     type="date"
-                                    class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm">
+                                    class="admin-date-input mt-1.5 w-full">
                                 <x-input-error :messages="$errors->get('tanggal_jatuh_tempo')" class="mt-1.5" />
                             </div>
 
                             <!-- Catatan Tambahan -->
                             <div class="sm:col-span-2">
-                                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                <label for="loan-notes" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
                                     Catatan Tambahan (Opsional)
                                 </label>
                                 <textarea wire:model="catatan"
+                                    id="loan-notes"
+                                    name="catatan"
                                     rows="2"
-                                    placeholder="Contoh: Dipinjam untuk keperluan penyusunan berkas perkara..."
+                                    placeholder="Contoh: Dipinjam untuk keperluan penyusunan berkas perkara…"
                                     class="mt-1.5 w-full rounded-xl border-stone-300 text-sm focus:border-kejati focus:ring-kejati shadow-sm placeholder:text-slate-400"></textarea>
                                 <x-input-error :messages="$errors->get('catatan')" class="mt-1.5" />
                             </div>
@@ -391,7 +382,7 @@
                         </div>
                         <input wire:model.live.debounce.300ms="search"
                             type="search"
-                            placeholder="Cari nama peminjam, NIP, instansi, atau judul buku..."
+                            placeholder="Cari nama peminjam, NIP, instansi, atau judul buku…"
                             class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 pl-10 pr-10 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
                         @if ($search)
                             <button wire:click="$set('search', '')" type="button"
@@ -406,14 +397,7 @@
 
                     <!-- Dropdown Status Transaksi -->
                     <div class="w-full sm:w-64 shrink-0">
-                        <select wire:model.live="statusFilter"
-                            class="w-full rounded-xl border-stone-200 bg-stone-50 py-2.5 px-3 text-sm text-slate-900 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
-                            <option value="">Semua Status Transaksi</option>
-                            <option value="dipinjam">Sedang Dipinjam</option>
-                            <option value="terlambat">Terlambat Kembali</option>
-                            <option value="dikembalikan">Sudah Dikembalikan</option>
-                            <option value="dibatalkan">Dibatalkan</option>
-                        </select>
+                        <x-custom-select wire:model.live="statusFilter" wire:key="loan-status" :options="['dipinjam' => 'Sedang Dipinjam', 'terlambat' => 'Terlambat Kembali', 'dikembalikan' => 'Sudah Dikembalikan', 'dibatalkan' => 'Dibatalkan']" empty-option="Semua Status Transaksi" />
                     </div>
                 </div>
 
@@ -423,14 +407,14 @@
                         <span class="font-semibold uppercase tracking-wider text-slate-500 text-[11px]">
                             Periode Pinjam:
                         </span>
-                        <div class="flex items-center gap-1.5">
+                        <div class="grid w-full grid-cols-1 gap-2 min-[430px]:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] min-[430px]:items-center sm:w-auto">
                             <input wire:model.live="startDate" type="date"
                                 title="Dari Tanggal Pinjam"
-                                class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-800 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                                class="admin-date-input w-full">
                             <span class="text-slate-400 font-medium">s.d.</span>
                             <input wire:model.live="endDate" type="date"
                                 title="Sampai Tanggal Pinjam"
-                                class="rounded-xl border-stone-200 bg-stone-50 py-1.5 px-3 text-xs text-slate-800 transition focus:border-kejati focus:bg-white focus:outline-none focus:ring-1 focus:ring-kejati">
+                                class="admin-date-input w-full">
                         </div>
 
                         @if ($startDate || $endDate || $statusFilter || $search)

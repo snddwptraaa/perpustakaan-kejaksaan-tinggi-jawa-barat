@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use DomainException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -38,7 +39,7 @@ class Loan extends Model
     {
         static::saving(function (Loan $loan): void {
             if ($loan->tanggal_jatuh_tempo?->lt($loan->tanggal_pinjam)) {
-                throw new \InvalidArgumentException('Tanggal jatuh tempo tidak boleh lebih awal dari tanggal pinjam.');
+                throw new DomainException('Tanggal jatuh tempo tidak boleh lebih awal dari tanggal pinjam.');
             }
         });
     }

@@ -174,6 +174,29 @@ class LoanManagerTest extends TestCase
         $this->assertEquals(3, $this->book->fresh()->stok_tersedia);
     }
 
+    public function test_double_cancel_and_double_extend_surface_errors_not_500(): void
+    {
+        $loan = Loan::create([
+            'book_id' => $this->book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Peminjam Kritis',
+            'tanggal_pinjam' => now()->toDateString(),
+            'tanggal_jatuh_tempo' => now()->addDays(7)->toDateString(),
+            'tanggal_dibatalkan' => now(),
+            'petugas_pembatal_id' => $this->admin->id,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(LoanManager::class)
+            ->call('returnBook', $loan->id)
+            ->assertHasErrors(['loan']);
+
+        Livewire::actingAs($this->admin)
+            ->test(LoanManager::class)
+            ->call('extendLoan', $loan->id)
+            ->assertHasErrors(['loan']);
+    }
+
     public function test_admin_can_filter_and_reset_loans(): void
     {
         Loan::create([

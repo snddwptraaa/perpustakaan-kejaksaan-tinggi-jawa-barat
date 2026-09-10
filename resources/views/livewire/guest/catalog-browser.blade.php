@@ -1,97 +1,108 @@
-<div class="mx-auto max-w-7xl px-5 py-8 lg:px-8 lg:py-12">
-    <div class="flex flex-col gap-6 border-b border-stone-200 pb-8 md:flex-row md:items-end md:justify-between">
-        <div>
-            <p class="page-kicker">Katalog terbuka</p>
-            <h1 class="mt-3 font-display text-4xl tracking-tight text-kejati-dark sm:text-5xl">Koleksi untuk Anda
-                telusuri</h1>
-            <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">Temukan referensi hukum dan pengetahuan
-                pendukung. Peminjaman dilakukan secara langsung melalui petugas perpustakaan.</p>
-        </div>
-        <div class="surface flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-slate-600"><span
-                class="status-dot bg-emerald-500 text-emerald-500"></span> {{ $books->total() }} judul ditemukan</div>
-    </div>
-    <div class="surface sticky top-[73px] z-20 mt-6 p-3 sm:p-4">
-        <div class="grid gap-4 lg:grid-cols-[1fr_220px_200px_auto]">
-            <div class="relative"><label for="search" class="sr-only">Cari judul atau penulis</label><span
-                    class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-400"
-                    aria-hidden="true">⌕</span><input wire:model.live.debounce.300ms="search" id="search" type="search"
-                    placeholder="Cari judul atau penulis…"
-                    class="field-control py-3 pl-11 pr-4">
+<div class="catalog-page">
+    <x-catalog-header />
+
+    <section class="catalog-intro" aria-labelledby="catalog-title">
+        <div class="catalog-container catalog-intro-layout">
+            <div>
+                <p class="catalog-eyebrow">Ruang referensi Anda</p>
+                <h1 id="catalog-title">Katalog buku<span aria-hidden="true">.</span></h1>
+                <p class="catalog-intro-description">Temukan bacaan, telusuri pengetahuan.<br class="hidden sm:block"> Referensi berikutnya dimulai dari sini.</p>
             </div>
-            <div><label for="category" class="sr-only">Filter kategori</label><select wire:model.live="category"
-                    id="category"
-                    class="field-control py-3">
-                    <option value="">Semua kategori</option>@foreach ($categories as $item)
-                    <option value="{{ $item->id }}">{{ $item->nama_kategori }}</option>@endforeach
-                </select></div>
-            <div><label for="availability" class="sr-only">Filter ketersediaan</label><select
-                    wire:model.live="availability" id="availability"
-                    class="field-control py-3">
-                    <option value="">Semua status</option>
-                    <option value="available">Tersedia</option>
-                    <option value="unavailable">Tidak tersedia</option>
-                </select></div>@if ($search || $category || $availability)<button
-                    wire:click="$set('search', '') ; $set('category', '') ; $set('availability', '')" type="button"
-                class="btn-secondary">Reset</button>@endif
+            <div class="catalog-guide">
+                <svg aria-hidden="true" class="h-7 w-7 shrink-0 text-kejati-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.5C9 4.5 5 4.5 3 5v14c3-.8 6-.4 9 1 3-1.4 6-1.8 9-1V5c-2-.5-6-.5-9 1.5Zm0 0V20" /></svg>
+                <div>
+                    <p class="font-semibold text-white">Dari katalog ke rak buku</p>
+                    <p class="mt-2 text-sm leading-6 text-emerald-100">Cek ketersediaan dan catat lokasi rak. Petugas kami siap membantu Anda menemukan bukunya.</p>
+                </div>
+            </div>
         </div>
-    </div>
-    <div wire:loading.delay class="py-10 text-center" role="status" aria-live="polite">
-        <span class="inline-flex items-center gap-3 rounded-full bg-white px-4 py-2 text-sm font-semibold text-kejati shadow-sm"><span class="h-4 w-4 animate-spin rounded-full border-2 border-kejati/20 border-t-kejati"></span>Memuat koleksi…</span>
-    </div>
-    <div wire:loading.remove class="mt-8">@if ($books->count())
-        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            @foreach ($books as $book)
-                <a href="{{ route('buku.detail', $book) }}"
-                    wire:navigate
-                    class="group surface flex flex-col overflow-hidden transition duration-200 hover:-translate-y-1 hover:border-kejati/50 hover:shadow-soft focus:outline-none focus:ring-2 focus:ring-kejati">
-                    <div class="relative flex h-52 items-center justify-center overflow-hidden bg-gradient-to-br from-[#166534] to-[#064E3B]">
-                        @if ($book->cover_image)
-                            <img src="{{ Storage::url($book->cover_image) }}"
-                                alt="Sampul {{ $book->judul }}"
-                                class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
-                        @else
-                            <span class="absolute -right-4 -top-8 text-[9rem] font-bold leading-none text-white/5" aria-hidden="true">B</span>
-                            <div class="relative px-8 text-center text-white">
-                                <div class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg border border-kejati-gold/50 text-kejati-gold transition duration-200 group-hover:scale-110" aria-hidden="true">▤</div>
-                                <p class="line-clamp-3 text-sm font-semibold leading-5">{{ $book->judul }}</p>
-                            </div>
-                        @endif
-                        <div class="absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide {{ $book->is_available ? 'bg-emerald-100 text-emerald-800' : 'bg-white/90 text-slate-600' }}">
-                            {{ $book->is_available ? 'Tersedia' : 'Tidak tersedia' }}
-                        </div>
-                    </div>
-                    <div class="flex flex-1 flex-col p-5">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-kejati-gold-dark">
-                            {{ $book->category->nama_kategori }}
-                        </p>
-                        <h2 class="mt-2 line-clamp-2 min-h-[3rem] font-semibold leading-6 text-slate-900 transition group-hover:text-kejati">
-                            {{ $book->judul }}
-                        </h2>
-                        <p class="mt-2 line-clamp-1 text-sm text-slate-500">{{ $book->penulis }}</p>
-                        <div class="mt-auto flex items-end justify-between gap-3 border-t border-stone-100 pt-4">
-                            <div>
-                                <p class="text-[10px] uppercase tracking-wide text-slate-400">Ketersediaan</p>
-                                <p class="mt-1 text-sm font-semibold {{ $book->is_available ? 'text-emerald-700' : 'text-slate-500' }}">
-                                    {{ $book->stok_tersedia }} / {{ $book->stok }} eksemplar
-                                </p>
-                            </div>
-                            <span class="rounded-lg p-2 text-kejati transition group-hover:bg-kejati group-hover:text-white" aria-hidden="true">
-                                →
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            @endforeach
-        </div>
-    <div class="mt-10">{{ $books->links() }}</div>@else<div
-                            class="surface border-dashed px-6 py-16 text-center"><span
-                class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-xl text-slate-400"
-                aria-hidden="true">⌕</span>
-            <h2 class="mt-4 font-semibold text-slate-800">Koleksi tidak ditemukan</h2>
-            <p class="mt-2 text-sm text-slate-500">Coba gunakan kata kunci atau filter yang berbeda.</p>
+    </section>
+
+    <div class="catalog-container pb-12">
+        <section class="catalog-search-panel" aria-label="Pencarian dan filter buku">
+            <div class="catalog-search-field">
+                <label for="search" class="catalog-label">Buku apa yang Anda cari?</label>
+                <div class="relative">
+                    <svg aria-hidden="true" class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-kejati" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75"><circle cx="10.5" cy="10.5" r="6.5" /><path stroke-linecap="round" d="m16 16 4.5 4.5" /></svg>
+                    <input wire:model.live.debounce.300ms="search" id="search" type="search" placeholder="Ketik judul atau nama penulis…" class="catalog-input catalog-search-input" autocomplete="off">
+                </div>
+            </div>
+            <div>
+                <label for="category" class="catalog-label">Kategori koleksi</label>
+                <x-custom-select wire:model.live="category" id="category" wire:key="catalog-category" :options="$categories" empty-option="Semua kategori" />
+            </div>
+            <div>
+                <label for="availability" class="catalog-label">Ketersediaan</label>
+                <x-custom-select wire:model.live="availability" id="availability" wire:key="catalog-availability" :options="['available' => 'Tersedia', 'unavailable' => 'Tidak tersedia']" empty-option="Semua status" />
+            </div>
+        </section>
+
+        <div class="catalog-results-heading">
+            <div>
+                <h2 class="text-xl font-bold tracking-tight text-kejati-dark">{{ $search || $category || $availability ? 'Hasil penelusuran' : 'Jelajahi koleksi' }}</h2>
+                <p role="status" aria-live="polite" aria-atomic="true" class="mt-1 text-sm text-slate-600">
+                    <span class="font-semibold text-slate-800">{{ number_format($books->total(), 0, ',', '.') }}</span> judul ditemukan
+                    @if ($books->total())<span class="mx-1 text-slate-400" aria-hidden="true">/</span> Menampilkan {{ $books->firstItem() }}–{{ $books->lastItem() }}@endif
+                </p>
+            </div>
             @if ($search || $category || $availability)
-                <button wire:click="$set('search', '') ; $set('category', '') ; $set('availability', '')" type="button" class="btn-secondary mt-5">Hapus semua filter</button>
+                <button wire:click="resetFilters" wire:loading.attr="disabled" type="button" class="catalog-reset">Hapus semua filter <span aria-hidden="true">×</span></button>
+            @else
+                <span class="hidden text-xs font-medium text-slate-600 sm:block">Diurutkan berdasarkan judul A–Z</span>
             @endif
-        </div>@endif
+        </div>
+
+        <div class="relative">
+            <div wire:loading.delay wire:target="search,category,availability,resetFilters,gotoPage,nextPage,previousPage" class="catalog-loading" role="status">
+                <span class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-4 py-2 text-sm font-semibold text-kejati shadow-soft"><span class="h-4 w-4 animate-spin rounded-full border-2 border-kejati/20 border-t-kejati" aria-hidden="true"></span>Memuat koleksi…</span>
+            </div>
+            <div wire:loading.class="opacity-50" wire:target="search,category,availability,resetFilters,gotoPage,nextPage,previousPage" class="transition-opacity">
+                @if ($books->count())
+                    <div class="catalog-grid">
+                        @foreach ($books as $book)
+                            <a wire:key="catalog-book-{{ $book->id }}" href="{{ route('buku.detail', $book) }}" wire:navigate class="catalog-card group" aria-labelledby="book-title-{{ $book->id }}">
+                                <div class="catalog-cover-stage">
+                                    <span class="catalog-availability {{ $book->is_available ? 'catalog-available' : 'catalog-unavailable' }}"><span aria-hidden="true"></span>{{ $book->is_available ? 'Tersedia' : 'Tidak tersedia' }}</span>
+                                    @if ($book->cover_image)
+                                        <img src="{{ Storage::url($book->cover_image) }}" alt="Sampul {{ $book->judul }}" loading="lazy" decoding="async" width="160" height="220" class="catalog-cover-image">
+                                    @else
+                                        <div class="catalog-book-placeholder" aria-hidden="true">
+                                            <span class="catalog-placeholder-label">KOLEKSI PERPUSTAKAAN</span>
+                                            <span class="catalog-placeholder-title">{{ $book->judul }}</span>
+                                            <span class="catalog-placeholder-author">{{ $book->penulis }}</span>
+                                            <span class="catalog-placeholder-rule"></span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="catalog-card-body">
+                                    <p class="catalog-category" title="{{ $book->category->nama_kategori }}">{{ $book->category->nama_kategori }}</p>
+                                    <h3 id="book-title-{{ $book->id }}" class="catalog-book-title">{{ $book->judul }}</h3>
+                                    <p class="catalog-author">{{ $book->penulis }}</p>
+                                    <div class="catalog-book-location">
+                                        <span class="inline-flex min-w-0 items-center gap-1.5"><svg aria-hidden="true" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6"><path stroke-linecap="round" stroke-linejoin="round" d="M4 3v18m16-18v18M4 11h16M4 20h16M8 4v7m4-7v7m4 4v5M8 15v5" /></svg><span class="break-words">{{ $book->lokasi_rak ? 'Rak '.$book->lokasi_rak : 'Tanyakan lokasi rak' }}</span></span>
+                                        <span class="shrink-0">{{ $book->tahun_terbit ?: 'Tahun —' }}</span>
+                                    </div>
+                                    <div class="catalog-card-footer">
+                                        <span><strong>{{ $book->stok_tersedia }}</strong> / {{ $book->stok }} eksemplar</span>
+                                        <span class="catalog-detail-link">Detail buku <span aria-hidden="true">↗</span></span>
+                                    </div>
+                                </div>
+                            </a>
+                        @endforeach
+                    </div>
+                    <div class="mt-9">{{ $books->onEachSide(1)->links('livewire.guest.catalog-pagination') }}</div>
+                @else
+                    <div class="catalog-empty">
+                        <svg aria-hidden="true" class="mx-auto h-12 w-12 text-kejati" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><circle cx="10.5" cy="10.5" r="6.5" /><path stroke-linecap="round" d="m16 16 4.5 4.5M8 10.5h5" /></svg>
+                        <h3 class="mt-5 text-xl font-bold text-kejati-dark">Koleksi tidak ditemukan</h3>
+                        <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-600">Coba kata kunci yang lebih singkat, pilih kategori lain, atau tampilkan semua status ketersediaan.</p>
+                        @if ($search || $category || $availability)
+                            <button wire:click="resetFilters" wire:loading.attr="disabled" type="button" class="btn-primary mt-6">Tampilkan semua buku</button>
+                        @endif
+                    </div>
+                @endif
+            </div>
+        </div>
+        <p class="mt-10 text-center text-xs leading-6 text-slate-600">Butuh bantuan menemukan referensi? Silakan hubungi petugas perpustakaan.</p>
     </div>
 </div>

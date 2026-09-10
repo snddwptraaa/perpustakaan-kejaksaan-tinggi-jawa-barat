@@ -42,6 +42,7 @@ class BookManagerTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Koleksi Buku');
         $response->assertSee('Tambah Buku Baru');
+        $response->assertSee('$wire.set(\'filterCategory\', val, true)', false);
     }
 
     public function test_admin_can_open_create_modal(): void
@@ -52,7 +53,8 @@ class BookManagerTest extends TestCase
             ->call('create')
             ->assertSet('showForm', true)
             ->assertSet('editingId', null)
-            ->assertSet('judul', '');
+            ->assertSet('judul', '')
+            ->assertSee('$wire.set(\'category_id\', val, false)', false);
     }
 
     public function test_admin_can_create_book_without_cover(): void
@@ -66,7 +68,7 @@ class BookManagerTest extends TestCase
             ->set('penerbit', 'Sinar Grafika')
             ->set('tahun_terbit', 2023)
             ->set('jumlah_halaman', '450 hlm')
-            ->set('isbn', '978-602-1234-56-7')
+            ->set('isbn', '978-0-13-468599-1')
             ->set('no_klasifikasi', '345.02 HAM h')
             ->set('lokasi_rak', 'Rak Pidana Lt. 2 - A3')
             ->set('stok', 5)
@@ -81,12 +83,47 @@ class BookManagerTest extends TestCase
             'judul' => 'Hukum Acara Pidana Indonesia',
             'penulis' => 'Prof. Dr. Andi Hamzah',
             'jumlah_halaman' => '450 hlm',
+            'isbn' => '9780134685991',
             'no_klasifikasi' => '345.02 HAM h',
             'lokasi_rak' => 'Rak Pidana Lt. 2 - A3',
             'stok' => 5,
             'stok_tersedia' => 5,
             'cover_image' => null,
         ]);
+    }
+
+    public function test_isbn_with_invalid_checksum_is_rejected(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('create')
+            ->set('category_id', (string) $this->category->id)
+            ->set('judul', 'Buku Uji')
+            ->set('penulis', 'Pengarang Uji')
+            ->set('stok', 1)
+            ->set('stok_tersedia', 1)
+            ->set('isbn', '9780134685992') // checksum salah
+            ->call('save')
+            ->assertHasErrors(['isbn']);
+
+        $this->assertDatabaseMissing('books', ['judul' => 'Buku Uji']);
+    }
+
+    public function test_isbn_malformed_input_is_rejected(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('create')
+            ->set('category_id', (string) $this->category->id)
+            ->set('judul', 'Buku Uji 2')
+            ->set('penulis', 'Pengarang Uji')
+            ->set('stok', 1)
+            ->set('stok_tersedia', 1)
+            ->set('isbn', '12345')
+            ->call('save')
+            ->assertHasErrors(['isbn']);
+
+        $this->assertDatabaseMissing('books', ['judul' => 'Buku Uji 2']);
     }
 
     public function test_admin_can_create_book_with_cover_upload(): void
@@ -208,5 +245,118 @@ class BookManagerTest extends TestCase
 
         $this->assertDatabaseHas('books', ['id' => $book->id]);
         Storage::disk('public')->assertExists('covers/history.jpg');
+    }
+
+    public function test_book_without_publication_year_can_be_created_and_edited(): void
+    {
+        Livewire::actingAs($this->admin)->test(BookManager::class)
+            ->call('create')
+            ->set('category_id', (string) $this->category->id)
+            ->set('judul', 'Buku tanpa tahun')
+            ->set('penulis', 'Penulis')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $book = Book::where('judul', 'Buku tanpa tahun')->firstOrFail();
+        $this->assertNull($book->tahun_terbit);
+
+        Livewire::actingAs($this->admin)->test(BookManager::class)
+            ->call('edit', $book->id)
+            ->assertSet('tahun_terbit', '')
+            ->set('judul', 'Buku diperbarui')
+            ->call('save')
+            ->assertHasNoErrors()
+            ->assertSet('showForm', false);
+
+        $this->assertNull($book->fresh()->tahun_terbit);
+        $this->assertSame('Buku diperbarui', $book->fresh()->judul);
+    }
+
+    public function test_admin_can_filter_sort_and_reset_book_collection(): void
+    {
+        $civilCategory = Category::create([
+            'nama_kategori' => 'Hukum Perdata',
+            'slug' => 'hukum-perdata',
+        ]);
+
+        Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Zulu Pidana',
+            'penulis' => 'Penulis A',
+            'stok' => 2,
+            'stok_tersedia' => 2,
+        ]);
+        Book::create([
+            'category_id' => $civilCategory->id,
+            'judul' => 'Alpha Perdata',
+            'penulis' => 'Penulis B',
+            'stok' => 3,
+            'stok_tersedia' => 1,
+        ]);
+        Book::create([
+            'category_id' => $civilCategory->id,
+            'judul' => 'Buku Diarsipkan',
+            'penulis' => 'Penulis C',
+            'stok' => 1,
+            'stok_tersedia' => 0,
+            'archived_at' => now(),
+        ]);
+        Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Kosong Pidana',
+            'penulis' => 'Penulis D',
+            'stok' => 1,
+            'stok_tersedia' => 0,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->set('filterCategory', (string) $civilCategory->id)
+            ->assertSee('Alpha Perdata')
+            ->assertSee('Buku Diarsipkan')
+            ->assertDontSee('Zulu Pidana')
+            ->set('filterStatus', 'archived')
+            ->assertSee('Buku Diarsipkan')
+            ->assertDontSee('Alpha Perdata')
+            ->set('filterCategory', '')
+            ->set('filterStatus', 'unavailable')
+            ->assertSee('Kosong Pidana')
+            ->assertDontSee('Buku Diarsipkan')
+            ->set('filterStatus', '')
+            ->set('sort', 'title_asc')
+            ->assertSeeInOrder(['Alpha Perdata', 'Buku Diarsipkan', 'Kosong Pidana', 'Zulu Pidana'])
+            ->call('resetFilters')
+            ->assertSet('search', '')
+            ->assertSet('filterCategory', '')
+            ->assertSet('filterStatus', '')
+            ->assertSet('sort', 'newest');
+    }
+
+    public function test_category_filter_can_be_opened_from_url(): void
+    {
+        $civilCategory = Category::create([
+            'nama_kategori' => 'Hukum Perdata',
+            'slug' => 'hukum-perdata',
+        ]);
+        Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Buku Pidana',
+            'penulis' => 'Penulis A',
+            'stok' => 1,
+            'stok_tersedia' => 1,
+        ]);
+        Book::create([
+            'category_id' => $civilCategory->id,
+            'judul' => 'Buku Perdata',
+            'penulis' => 'Penulis B',
+            'stok' => 1,
+            'stok_tersedia' => 1,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get(route('admin.books', ['category' => $civilCategory->id]))
+            ->assertOk()
+            ->assertSee('Buku Perdata')
+            ->assertDontSee('Buku Pidana');
     }
 }

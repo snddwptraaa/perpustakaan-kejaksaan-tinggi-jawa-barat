@@ -16,14 +16,14 @@ export default {
                     dark: '#064E3B',
                     green: '#15803D',
                     gold: '#F4C542',
-                    'gold-dark': '#B89100',
+                    'gold-dark': '#806400',
                     ink: '#1F2937',
                     canvas: '#F7FAF8',
                     surface: '#FFFFFF',
                 },
             },
             fontFamily: {
-                sans: ['Inter', 'ui-sans-serif', 'system-ui', ...defaultTheme.fontFamily.sans],
+                sans: ['ui-sans-serif', 'system-ui', ...defaultTheme.fontFamily.sans],
                 display: ['Georgia', ...defaultTheme.fontFamily.serif],
             },
             boxShadow: {

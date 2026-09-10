@@ -5,15 +5,22 @@ namespace App\Livewire\Admin;
 use App\Models\Book;
 use App\Models\Category;
 use App\Services\AuditLogger;
+use App\Services\XlsxReportWriter;
+use App\Support\Csv;
+use App\Support\Isbn;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -26,7 +33,17 @@ class BookManager extends Component
 
     public ?int $editingId = null;
 
+    #[Url(except: '')]
     public string $search = '';
+
+    #[Url(as: 'category', except: '')]
+    public string $filterCategory = '';
+
+    #[Url(as: 'status', except: '')]
+    public string $filterStatus = '';
+
+    #[Url(except: 'newest')]
+    public string $sort = 'newest';
 
     public string $category_id = '';
 
@@ -140,6 +157,8 @@ class BookManager extends Component
             'slug' => $slug,
         ]);
 
+        Cache::forget('categories:options');
+
         $this->category_id = (string) $category->id;
         $this->showQuickCategoryModal = false;
         $this->newCategoryName = '';
@@ -151,12 +170,61 @@ class BookManager extends Component
         $this->resetPage();
     }
 
+    public function updatedFilterCategory(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedSort(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->reset(['search', 'filterCategory', 'filterStatus']);
+        $this->sort = 'newest';
+        $this->resetPage();
+    }
+
     public function updatedStok($value): void
     {
-        // Auto sync stok_tersedia for new book creation
         if (! $this->editingId) {
+            // Mode buat: stok tersedia mengikuti total karena belum ada peminjaman.
             $this->stok_tersedia = (int) $value;
+
+            return;
         }
+
+        // Mode edit: stok_tersedia dihitung ulang di save() sebagai
+        // total stok - jumlah peminjaman aktif. Tampilkan preview agar petugas
+        // langsung melihat angka yang akan tersimpan.
+        $book = Book::find($this->editingId);
+        if (! $book) {
+            return;
+        }
+
+        $activeLoans = $book->loans()->active()->count();
+        $this->stok_tersedia = max(0, (int) $value - $activeLoans);
+    }
+
+    /**
+     * Jumlah peminjaman aktif saat ini — untuk pesan bantuan di form.
+     */
+    public function getActiveLoansCountProperty(): int
+    {
+        if (! $this->editingId) {
+            return 0;
+        }
+
+        $book = Book::find($this->editingId);
+
+        return $book ? $book->loans()->active()->count() : 0;
     }
 
     public function create(): void
@@ -173,7 +241,7 @@ class BookManager extends Component
         $this->judul = (string) ($book->judul ?? '');
         $this->penulis = (string) ($book->penulis ?? '');
         $this->penerbit = (string) ($book->penerbit ?? '');
-        $this->tahun_terbit = (string) ($book->tahun_terbit ?? '');
+        $this->tahun_terbit = $book->tahun_terbit ? (string) $book->tahun_terbit : '';
         $this->jumlah_halaman = (string) ($book->jumlah_halaman ?? '');
         $this->isbn = (string) ($book->isbn ?? '');
         $this->no_klasifikasi = (string) ($book->no_klasifikasi ?? '');
@@ -204,7 +272,18 @@ class BookManager extends Component
 
     public function save(): void
     {
+        // Normalisasi ISBN sebelum validasi: terima input dengan dash/spasi/titik,
+        // tolak checksum yang salah dengan pesan ramah (bukan 500).
+        if ($this->isbn !== '') {
+            try {
+                $this->isbn = Isbn::normalize($this->isbn);
+            } catch (\InvalidArgumentException $exception) {
+                throw ValidationException::withMessages(['isbn' => $exception->getMessage()]);
+            }
+        }
+
         $data = $this->validate();
+        $data['tahun_terbit'] = $data['tahun_terbit'] === '' ? null : $data['tahun_terbit'];
         unset($data['cover']); // Remove uploaded file object from mass assignment array
 
         $newCover = $this->cover?->store('covers', 'public');
@@ -301,27 +380,79 @@ class BookManager extends Component
 
         $filename = 'katalog-buku-'.now()->format('Y-m-d_H-i-s').'.pdf';
 
-        $books = Book::active()->with('category')
-            ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('judul', 'like', "%{$this->search}%")
-                        ->orWhere('penulis', 'like', "%{$this->search}%")
-                        ->orWhere('isbn', 'like', "%{$this->search}%")
-                        ->orWhere('no_klasifikasi', 'like', "%{$this->search}%")
-                        ->orWhere('lokasi_rak', 'like', "%{$this->search}%");
-                });
-            })
-            ->orderBy('judul')
-            ->get();
+        $books = $this->filteredBooksQuery()->get();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.catalog-pdf', [
+        $pdf = Pdf::loadView('reports.catalog-pdf', [
             'books' => $books,
         ])
-        ->setPaper('a4', 'portrait');
+            ->setPaper('a4', 'portrait');
 
         return response()->streamDownload(function () use ($pdf): void {
             echo $pdf->output();
         }, $filename, ['Content-Type' => 'application/pdf']);
+    }
+
+    public function exportCsv(): StreamedResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $filename = 'koleksi-buku-'.now()->format('Y-m-d_H-i-s').'.csv';
+
+        return response()->streamDownload(function (): void {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['Judul', 'Penulis', 'Penerbit', 'Tahun Terbit', 'ISBN', 'Kategori', 'No. Klasifikasi', 'Lokasi Rak', 'Total Stok', 'Stok Tersedia', 'Status']);
+
+            foreach ($this->filteredBooksQuery()->lazy(500) as $book) {
+                fputcsv($handle, array_map([Csv::class, 'safeCell'], [
+                    $book->judul,
+                    $book->penulis,
+                    $book->penerbit ?? '',
+                    $book->tahun_terbit ?? '',
+                    $book->isbn ?? '',
+                    $book->category?->nama_kategori ?? '',
+                    $book->no_klasifikasi ?? '',
+                    $book->lokasi_rak ?? '',
+                    $book->stok,
+                    $book->stok_tersedia,
+                    $book->archived_at ? 'Diarsipkan' : 'Aktif',
+                ]));
+            }
+
+            fclose($handle);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function exportXlsx(): BinaryFileResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        return app(XlsxReportWriter::class)->download(
+            'koleksi-buku-'.now()->format('Y-m-d_H-i-s').'.xlsx',
+            ['Judul', 'Penulis', 'Penerbit', 'Tahun Terbit', 'ISBN', 'Kategori', 'No. Klasifikasi', 'Lokasi Rak', 'Total Stok', 'Stok Tersedia', 'Status'],
+            function (callable $appendRow): void {
+                foreach ($this->filteredBooksQuery()->lazy(500) as $book) {
+                    $appendRow([
+                        $book->judul,
+                        $book->penulis,
+                        $book->penerbit ?? '',
+                        $book->tahun_terbit ?? '',
+                        $book->isbn ?? '',
+                        $book->category?->nama_kategori ?? '',
+                        $book->no_klasifikasi ?? '',
+                        $book->lokasi_rak ?? '',
+                        $book->stok,
+                        $book->stok_tersedia,
+                        $book->archived_at ? 'Diarsipkan' : 'Aktif',
+                    ]);
+                }
+            },
+            title: 'Koleksi Buku Perpustakaan',
+            meta: [
+                'Dicetak pada' => now()->format('Y-m-d H:i:s'),
+                'Dicetak oleh' => auth()->user()?->name ?? 'Sistem',
+            ],
+        );
     }
 
     public function resetForm(): void
@@ -350,19 +481,43 @@ class BookManager extends Component
     public function render()
     {
         return view('livewire.admin.book-manager', [
-            'books' => Book::with('category')
-                ->when($this->search, function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('judul', 'like', "%{$this->search}%")
-                            ->orWhere('penulis', 'like', "%{$this->search}%")
-                            ->orWhere('isbn', 'like', "%{$this->search}%")
-                            ->orWhere('no_klasifikasi', 'like', "%{$this->search}%")
-                            ->orWhere('lokasi_rak', 'like', "%{$this->search}%");
-                    });
-                })
-                ->latest()
-                ->paginate(10),
-            'categories' => Category::orderBy('nama_kategori')->get(),
+            'books' => $this->filteredBooksQuery()->paginate(15),
+            'categories' => Cache::remember('categories:options', now()->addMinutes(5), fn () => Category::orderBy('nama_kategori')->get()),
         ])->layout('layouts.admin', ['title' => 'Koleksi Buku']);
+    }
+
+    private function filteredBooksQuery(): Builder
+    {
+        $query = Book::query()
+            ->with('category')
+            ->when($this->search !== '', function (Builder $query): void {
+                $query->where(function (Builder $query): void {
+                    $query->where('judul', 'like', "%{$this->search}%")
+                        ->orWhere('penulis', 'like', "%{$this->search}%")
+                        ->orWhere('isbn', 'like', "%{$this->search}%")
+                        ->orWhere('no_klasifikasi', 'like', "%{$this->search}%")
+                        ->orWhere('lokasi_rak', 'like', "%{$this->search}%");
+                });
+            })
+            ->when($this->filterCategory !== '', fn (Builder $query) => $query->where('category_id', $this->filterCategory));
+
+        match ($this->filterStatus) {
+            'active' => $query->whereNull('archived_at'),
+            'archived' => $query->whereNotNull('archived_at'),
+            'available' => $query->whereNull('archived_at')->where('stok_tersedia', '>', 0),
+            'unavailable' => $query->whereNull('archived_at')->where('stok_tersedia', '<=', 0),
+            default => null,
+        };
+
+        match ($this->sort) {
+            'title_asc' => $query->orderBy('judul')->orderBy('id'),
+            'category_asc' => $query
+                ->orderBy(Category::query()->select('nama_kategori')->whereColumn('categories.id', 'books.category_id'))
+                ->orderBy('judul'),
+            'stock_asc' => $query->orderBy('stok_tersedia')->orderBy('judul'),
+            default => $query->latest()->orderByDesc('id'),
+        };
+
+        return $query;
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Livewire\Guest;
 
 use App\Models\Visitor;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -23,6 +25,20 @@ class VisitorForm extends Component
 
     public bool $accepted_privacy = false;
 
+    public bool $alreadyCheckedIn = false;
+
+    public function mount(): void
+    {
+        if (session('visitor_checked_in') && session('visitor_checked_in_at') === now()->toDateString()) {
+            $this->alreadyCheckedIn = true;
+        }
+    }
+
+    public function updated(string $propertyName): void
+    {
+        $this->validateOnly($propertyName);
+    }
+
     public function setKategori(string $kategori): void
     {
         if (in_array($kategori, ['umum', 'pegawai'])) {
@@ -33,12 +49,62 @@ class VisitorForm extends Component
             if ($kategori === 'umum') {
                 $this->nip = '';
             }
+
+            // Jika keperluan sebelumnya tidak valid di kategori baru, reset
+            $validKeperluan = $kategori === 'pegawai'
+                ? self::keperluanPegawaiOptions()
+                : self::keperluanUmumOptions();
+
+            if ($this->keperluan !== '' && ! array_key_exists($this->keperluan, $validKeperluan)) {
+                $this->keperluan = '';
+            }
         }
+    }
+
+    public static function unitKerjaOptions(): array
+    {
+        return [
+            'Pembinaan' => '1. Pembinaan',
+            'Intelijen' => '2. Intelijen',
+            'Tindak Pidana Umum' => '3. Pidana Umum',
+            'Tindak Pidana Khusus' => '4. Pidana Khusus',
+            'Perdata dan Tata Usaha Negara' => '5. Perdata dan Tata Usaha Negara',
+            'Pidana Militer' => '6. Pidana Militer',
+            'Pengawasan' => '7. Pengawasan',
+            'Pemulihan Aset' => '8. Pemulihan Aset',
+            'Bagian Tata Usaha' => '9. Bagian Tata Usaha',
+        ];
+    }
+
+    public static function keperluanPegawaiOptions(): array
+    {
+        return [
+            'Penyusunan Berkas / Dakwaan / Tuntutan' => 'Penyusunan Berkas / Dakwaan / Tuntutan',
+            'Riset Yurisprudensi, Doktrin & Peraturan' => 'Riset Yurisprudensi, Doktrin & Peraturan',
+            'Mencari Referensi Tugas Kedinasan' => 'Mencari Referensi Tugas Kedinasan',
+            'Membaca di Tempat' => 'Membaca di Tempat',
+            'Peminjaman Koleksi Buku' => 'Peminjaman Koleksi Buku',
+            'Keperluan Kedinasan Lainnya' => 'Keperluan Kedinasan Lainnya',
+        ];
+    }
+
+    public static function keperluanUmumOptions(): array
+    {
+        return [
+            'Mencari Referensi Hukum & Koleksi' => 'Mencari Referensi Hukum & Koleksi',
+            'Membaca di Tempat' => 'Membaca di Tempat',
+            'Riset Skripsi / Tesis / Penelitian' => 'Riset Skripsi / Tesis / Penelitian',
+            'Studi Pustaka / Kunjungan Lembaga' => 'Studi Pustaka / Kunjungan Lembaga',
+            'Keperluan Lainnya' => 'Keperluan Lainnya',
+        ];
     }
 
     protected function rules(): array
     {
         $isPegawai = $this->kategori === 'pegawai';
+        $keperluanOptions = $isPegawai
+            ? self::keperluanPegawaiOptions()
+            : self::keperluanUmumOptions();
 
         return [
             'kategori' => ['required', 'string', 'in:umum,pegawai'],
@@ -46,9 +112,11 @@ class VisitorForm extends Component
             'nip' => $isPegawai
                 ? ['required', 'string', 'min:5', 'max:30']
                 : ['nullable', 'string', 'max:30'],
-            'instansi_unit' => ['required', 'string', 'max:255'],
+            'instansi_unit' => $isPegawai
+                ? ['required', 'string', 'max:255', Rule::in(array_keys(self::unitKerjaOptions()))]
+                : ['required', 'string', 'max:255'],
             'no_hp' => ['nullable', 'string', 'max:100'],
-            'keperluan' => ['required', 'string', 'max:255'],
+            'keperluan' => ['required', 'string', 'max:255', Rule::in(array_keys($keperluanOptions))],
             'accepted_privacy' => ['accepted'],
         ];
     }
@@ -61,7 +129,9 @@ class VisitorForm extends Component
             'instansi_unit.required' => $this->kategori === 'pegawai'
                 ? 'Unit kerja / Bidang / Satker Kejaksaan wajib diisi.'
                 : 'Instansi / Lembaga / Asal pengunjung wajib diisi.',
+            'instansi_unit.in' => 'Unit kerja / bidang Kejaksaan tidak valid. Silakan pilih dari daftar yang tersedia.',
             'keperluan.required' => 'Keperluan kunjungan wajib dipilih atau diisi.',
+            'keperluan.in' => 'Keperluan kunjungan tidak valid. Silakan pilih dari daftar yang tersedia.',
             'accepted_privacy.accepted' => 'Persetujuan pemrosesan data wajib diberikan.',
         ];
     }
@@ -76,7 +146,22 @@ class VisitorForm extends Component
             ]);
         }
 
-        $data = $this->validate();
+        if (! $this->accepted_privacy) {
+            RateLimiter::hit($throttleKey, 60);
+            $this->addError('accepted_privacy', 'Persetujuan pemrosesan data wajib diberikan.');
+
+            return;
+        }
+
+        try {
+            $data = $this->validate();
+        } catch (ValidationException $exception) {
+            // Hitung juga percobaan gagal agar form buku tamu tidak bisa di-spam
+            // entri tidak valid tanpa batas sebelum throttle aktif.
+            RateLimiter::hit($throttleKey, 60);
+
+            throw $exception;
+        }
 
         if ($this->kategori === 'umum') {
             $data['nip'] = null;
@@ -87,6 +172,7 @@ class VisitorForm extends Component
         $data['privacy_consented_at'] = now();
         $visitor = Visitor::create($data);
         RateLimiter::hit($throttleKey, 60);
+        Cache::forget('admin:dashboard-stats');
 
         session([
             'visitor_checked_in' => true,
@@ -100,17 +186,11 @@ class VisitorForm extends Component
 
     public function render()
     {
-        $statistics = Visitor::query()
-            ->whereBetween('created_at', [today()->startOfDay(), today()->endOfDay()])
-            ->selectRaw('COUNT(*) as total')
-            ->selectRaw("SUM(CASE WHEN kategori = 'pegawai' THEN 1 ELSE 0 END) as pegawai")
-            ->selectRaw("SUM(CASE WHEN kategori = 'umum' THEN 1 ELSE 0 END) as umum")
-            ->first();
-
         return view('livewire.guest.visitor-form', [
-            'todayVisitors' => (int) $statistics->total,
-            'todayPegawai' => (int) $statistics->pegawai,
-            'todayUmum' => (int) $statistics->umum,
+            'unitKerjaList' => self::unitKerjaOptions(),
+            'keperluanList' => $this->kategori === 'pegawai'
+                ? self::keperluanPegawaiOptions()
+                : self::keperluanUmumOptions(),
         ])->layout('layouts.guest', ['title' => 'Buku Tamu Kunjungan']);
     }
 }

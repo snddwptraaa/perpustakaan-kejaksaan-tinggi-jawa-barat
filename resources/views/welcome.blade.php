@@ -11,338 +11,238 @@
     @livewireStyles
 </head>
 
-<body class="min-h-full font-sans antialiased bg-stone-50 text-slate-900">
+<body class="landing-page min-h-full bg-kejati-canvas font-sans text-slate-900 antialiased">
     <a href="#main-content" class="skip-link">Lewati ke konten utama</a>
-    <header x-data="{ menuOpen: false }" class="sticky top-0 z-50 text-white border-b shadow-md border-white/10 bg-kejati/95 backdrop-blur-md">
-        <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 lg:px-8">
-            <a href="{{ route('home') }}" class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan Tinggi Jawa Barat"
-                    class="object-contain w-auto h-10 shrink-0 drop-shadow">
-                <span>
-                    <span class="block text-[10px] font-semibold uppercase tracking-[0.22em] text-kejati-gold">Kejaksaan
-                        Tinggi Jawa Barat</span>
-                    <span class="block text-sm font-semibold">Perpustakaan Digital</span>
-                </span>
-            </a>
-
-            <nav class="hidden items-center gap-1 text-sm font-medium md:flex" aria-label="Navigasi utama">
-                <a href="#hero"
-                    class="rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-white/90 transition hover:bg-white/10 hover:text-white">Beranda</a>
-                <a href="#tentang"
-                    class="rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-white/90 transition hover:bg-white/10 hover:text-white">Tentang</a>
-                <a href="#layanan"
-                    class="rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-white/90 transition hover:bg-white/10 hover:text-white">Layanan</a>
-                <a href="#kontak"
-                    class="rounded-lg px-2.5 py-1.5 sm:px-3 sm:py-2 text-white/90 transition hover:bg-white/10 hover:text-white">Kontak</a>
-            </nav>
-
-            <a href="{{ route('login') }}"
-                class="hidden px-4 py-2 text-sm font-semibold text-white transition border rounded-lg md:inline-flex border-white/25 hover:bg-white/10">Masuk
-                petugas</a>
-            <button type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen" aria-controls="home-mobile-navigation"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/10 md:hidden" aria-label="Buka menu">
-                <svg x-show="!menuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" /></svg>
-                <svg x-cloak x-show="menuOpen" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
-            </button>
-        </div>
-        <nav id="home-mobile-navigation" x-cloak x-show="menuOpen" x-transition.origin.top class="border-t border-white/10 px-5 py-3 md:hidden" aria-label="Navigasi mobile">
-            <div class="mx-auto grid max-w-7xl grid-cols-2 gap-2 text-sm font-semibold">
-                <a href="#tentang" class="rounded-xl bg-white/10 px-4 py-3">Tentang</a>
-                <a href="#layanan" class="rounded-xl bg-white/10 px-4 py-3">Layanan</a>
-                <a href="{{ route('kunjungan') }}" class="rounded-xl bg-kejati-gold px-4 py-3 text-kejati-dark">Jelajahi katalog</a>
-                <a href="{{ route('login') }}" class="rounded-xl px-4 py-3 text-white/80">Masuk petugas</a>
-            </div>
-        </nav>
-    </header>
+    <x-public-header />
 
     <main id="main-content" tabindex="-1">
-        <section id="hero" class="relative overflow-hidden text-white bg-kejati">
-            <div class="absolute -right-40 -top-48 h-[38rem] w-[38rem] rounded-full border border-kejati-gold/15"></div>
-            <div class="absolute bottom-0 right-0 h-40 w-2/3 bg-gradient-to-l from-[#064E3B]/60 to-transparent"></div>
-            <div
-                class="relative mx-auto grid min-h-[580px] max-w-7xl items-center gap-12 px-5 pb-20 pt-16 lg:grid-cols-[1fr_0.75fr] lg:px-8 lg:pt-20">
-                <div class="max-w-2xl">
+        <section id="hero" class="landing-hero">
+            <div class="landing-hero-grid">
+                <div class="landing-hero-copy">
                     <p
-                        class="mb-6 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-[0.25em] text-kejati-gold">
-                        <span class="w-10 h-px bg-kejati-gold"></span> Ruang pengetahuan Kejati Jabar
+                        class="landing-eyebrow">
+                        <span class="h-px w-8 bg-kejati-gold-dark" aria-hidden="true"></span> Ruang pengetahuan Kejati Jabar
                     </p>
-                    <h1 class="font-display text-5xl leading-[1.04] tracking-tight sm:text-6xl lg:text-7xl">
-                        Baca untuk <span class="text-kejati-gold">memahami.</span>
+                    <h1 class="landing-hero-title">
+                        Baca untuk <span>memahami.</span>
                     </h1>
-                    <p class="max-w-xl text-lg leading-8 mt-7 text-white/70">
+                    <p class="mt-7 max-w-xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
                         Akses katalog referensi hukum dan koleksi pengetahuan Perpustakaan Kejaksaan Tinggi Jawa
                         Barat—teratur, terbuka, dan dekat dengan kebutuhan Anda.
                     </p>
-                    <div class="flex flex-col gap-3 mt-10 sm:flex-row">
+                    <div class="mt-10 flex flex-col gap-3 sm:flex-row">
                         <a href="{{ route('kunjungan') }}"
-                            class="inline-flex items-center justify-center gap-3 rounded-xl bg-kejati-gold px-6 py-3.5 text-sm font-bold text-kejati-dark shadow-xl shadow-black/10 transition hover:bg-yellow-200">
-                            Jelajahi katalog <span class="text-lg">→</span>
+                            class="landing-primary-link">
+                            Isi buku tamu
+                            <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2.25">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
                         </a>
                         <a href="#tentang"
-                            class="inline-flex items-center justify-center rounded-xl border border-white/20 px-6 py-3.5 text-sm font-semibold text-white/80 transition hover:bg-white/10 hover:text-white">
+                            class="landing-secondary-link">
                             Tentang perpustakaan
                         </a>
                     </div>
+                    <p class="mt-4 text-xs leading-5 text-slate-600">Isi buku tamu terlebih dahulu untuk melanjutkan ke katalog.</p>
                 </div>
-                <div class="relative hidden lg:block">
-                    <div
-                        class="relative mx-auto aspect-[4/5] max-w-sm rotate-3 rounded-[2rem] border border-kejati-gold/30 bg-gradient-to-br from-white/15 to-white/5 p-5 shadow-2xl shadow-black/20">
-                        <div
-                            class="flex h-full flex-col justify-between rounded-[1.4rem] border border-white/10 bg-kejati-dark/80 p-7">
-                            <div>
-                                <p class="text-xs uppercase tracking-[0.22em] text-kejati-gold">Koleksi hukum</p>
-                                <div class="h-px mt-8 bg-kejati-gold/50"></div>
-                                <p class="mt-6 text-4xl font-semibold leading-tight">Pengetahuan<br><span
-                                        class="text-kejati-gold">yang terjaga.</span></p>
-                            </div>
-                            <div>
-                                <p class="text-sm leading-6 text-white/50">Perpustakaan Kejaksaan Tinggi Jawa Barat</p>
-                                <div class="flex items-end justify-between mt-5">
-                                    <span class="text-5xl font-light text-white/20">01</span>
-                                    <span class="text-2xl text-kejati-gold">✦</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <figure class="landing-photo">
+                    <img src="{{ asset('images/library-hero.webp') }}" alt="" width="1672" height="941"
+                        fetchpriority="high" decoding="async">
+                    <figcaption>
+                        <span class="landing-photo-label">Perpustakaan Kejati Jawa Barat</span>
+                        <span class="font-display text-2xl sm:text-3xl">Ruang untuk membaca.<br>Bekal untuk berkarya.</span>
+                    </figcaption>
+                </figure>
+            </div>
+            <div class="landing-visit-strip">
+                <p><span>Referensi hukum</span>Perundangan, yurisprudensi, dan literatur umum.</p>
+                <p><span>Layanan perpustakaan</span>Baca di tempat dan peminjaman bersama petugas.</p>
+                <a href="#kontak">Rencanakan kunjungan <span aria-hidden="true">↗</span></a>
             </div>
         </section>
 
-        <!-- Section Layanan -->
-        <section id="layanan" class="scroll-mt-16 border-b border-stone-200/60 bg-[#F4F7F5] py-14">
-            <div class="px-5 mx-auto max-w-7xl lg:px-8">
-                <div class="mb-8">
-                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Fasilitas & Akses</p>
-                    <h2 class="mt-1 text-2xl font-bold tracking-tight text-kejati-dark sm:text-3xl">Layanan</h2>
-                </div>
-
-                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <!-- 1. Baca di tempat -->
-                    <div
-                        class="flex flex-col items-center justify-center text-center transition duration-300 bg-white border shadow-sm group rounded-2xl border-stone-200/80 p-7 hover:-translate-y-1 hover:border-kejati-gold/60 hover:shadow-md">
-                        <div
-                            class="flex items-center justify-center mb-4 transition duration-300 shadow-inner h-14 w-14 rounded-2xl bg-emerald-50 text-kejati group-hover:bg-kejati group-hover:text-kejati-gold">
-                            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-base font-semibold transition duration-200 text-slate-800 group-hover:text-kejati">Baca
-                            di tempat</span>
+        <section id="layanan" class="landing-services scroll-mt-24 bg-white py-16 sm:py-20 lg:py-24">
+            <div class="mx-auto max-w-7xl px-5 lg:px-8">
+                <div class="grid gap-8 border-b border-kejati/15 pb-9 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Fasilitas & akses</p>
+                        <h2 class="mt-3 font-display text-4xl leading-tight tracking-tight text-kejati-dark sm:text-5xl">Layanan</h2>
                     </div>
-
-                    <!-- 2. Peminjaman -->
-                    <div
-                        class="flex flex-col items-center justify-center text-center transition duration-300 bg-white border shadow-sm group rounded-2xl border-stone-200/80 p-7 hover:-translate-y-1 hover:border-kejati-gold/60 hover:shadow-md">
-                        <div
-                            class="flex items-center justify-center mb-4 transition duration-300 shadow-inner h-14 w-14 rounded-2xl bg-emerald-50 text-kejati group-hover:bg-kejati group-hover:text-kejati-gold">
-                            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13L21 8m0 0l-4.5 4.5M21 8H7.5" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-base font-semibold transition duration-200 text-slate-800 group-hover:text-kejati">Peminjaman</span>
-                    </div>
-
-                    <!-- 3. Referensi -->
-                    <div
-                        class="flex flex-col items-center justify-center text-center transition duration-300 bg-white border shadow-sm group rounded-2xl border-stone-200/80 p-7 hover:-translate-y-1 hover:border-kejati-gold/60 hover:shadow-md">
-                        <div
-                            class="flex items-center justify-center mb-4 transition duration-300 shadow-inner h-14 w-14 rounded-2xl bg-emerald-50 text-kejati group-hover:bg-kejati group-hover:text-kejati-gold">
-                            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-base font-semibold transition duration-200 text-slate-800 group-hover:text-kejati">Referensi</span>
-                    </div>
-
-                    <!-- 4. Repositori digital -->
-                    <div
-                        class="flex flex-col items-center justify-center text-center transition duration-300 bg-white border shadow-sm group rounded-2xl border-stone-200/80 p-7 hover:-translate-y-1 hover:border-kejati-gold/60 hover:shadow-md">
-                        <div
-                            class="flex items-center justify-center mb-4 transition duration-300 shadow-inner h-14 w-14 rounded-2xl bg-emerald-50 text-kejati group-hover:bg-kejati group-hover:text-kejati-gold">
-                            <svg class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 5.625c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
-                            </svg>
-                        </div>
-                        <span
-                            class="text-base font-semibold transition duration-200 text-slate-800 group-hover:text-kejati">Repositori
-                            digital</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="px-5 py-20 mx-auto max-w-7xl lg:px-8 lg:py-28">
-            <div class="grid gap-12 lg:grid-cols-[0.7fr_1fr] lg:items-start">
-                <div>
-                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Mengapa perpustakaan?
+                    <p class="max-w-2xl text-base leading-7 text-slate-600 lg:justify-self-end lg:pb-1">
+                        Gunakan fasilitas perpustakaan untuk membaca, meminjam, menemukan referensi, dan menelusuri
+                        data koleksi sesuai kebutuhan Anda.
                     </p>
-                    <h2 class="max-w-md mt-4 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">Referensi
-                        yang membantu langkah Anda lebih pasti.</h2>
                 </div>
-                <div class="grid gap-8 sm:grid-cols-2">
-                    <div class="pl-5 border-l-2 border-kejati-gold">
-                        <p class="text-3xl font-semibold text-kejati">01</p>
-                        <h3 class="mt-3 font-semibold">Koleksi terkurasi</h3>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Referensi hukum, perundangan, dan pengetahuan
-                            umum untuk mendukung pekerjaan dan penelitian.</p>
-                    </div>
-                    <div class="pl-5 border-l-2 border-kejati-gold">
-                        <p class="text-3xl font-semibold text-kejati">02</p>
-                        <h3 class="mt-3 font-semibold">Akses yang jelas</h3>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Cari judul, penulis, dan ketersediaan buku
-                            sebelum Anda datang ke rak.</p>
-                    </div>
-                    <div class="pl-5 border-l-2 border-kejati-gold">
-                        <p class="text-3xl font-semibold text-kejati">03</p>
-                        <h3 class="mt-3 font-semibold">Layanan tertib</h3>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Setiap kunjungan dan sirkulasi buku tercatat
-                            untuk menjaga layanan tetap akuntabel.</p>
-                    </div>
-                    <div class="pl-5 border-l-2 border-kejati-gold">
-                        <p class="text-3xl font-semibold text-kejati">04</p>
-                        <h3 class="mt-3 font-semibold">Datang dan bertanya</h3>
-                        <p class="mt-2 text-sm leading-6 text-slate-500">Peminjaman dilakukan langsung melalui petugas
-                            di lokasi perpustakaan.</p>
-                    </div>
+
+                <div class="mt-8 grid gap-6">
+                    <article class="landing-service-panel">
+                        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-stone-200 px-6 py-5 sm:px-8">
+                            <div>
+                                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-kejati">Di perpustakaan</p>
+                                <h3 class="mt-1 text-xl font-bold text-slate-950">Layanan saat Anda berkunjung</h3>
+                            </div>
+                            <span class="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-kejati">
+                                Bersama petugas
+                            </span>
+                        </div>
+
+                        <ul class="landing-service-list" aria-label="Layanan di perpustakaan">
+                            <li class="grid gap-4 px-6 py-6 sm:px-8">
+                                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-kejati text-kejati-gold">
+                                    <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                    </svg>
+                                </span>
+                                <div>
+                                    <h4 class="font-bold text-slate-900">Baca di tempat</h4>
+                                    <p class="mt-1 text-sm leading-6 text-slate-600">Gunakan koleksi dan ruang baca selama jam layanan perpustakaan.</p>
+                                </div>
+                            </li>
+                            <li class="grid gap-4 px-6 py-6 sm:px-8">
+                                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-kejati text-kejati-gold">
+                                    <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13L21 8m0 0l-4.5 4.5M21 8H7.5" />
+                                    </svg>
+                                </span>
+                                <div>
+                                    <h4 class="font-bold text-slate-900">Peminjaman</h4>
+                                    <p class="mt-1 text-sm leading-6 text-slate-600">Pilih buku melalui katalog, lalu proses peminjaman fisik bersama petugas.</p>
+                                </div>
+                            </li>
+                            <li class="grid gap-4 px-6 py-6 sm:px-8">
+                                <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-kejati text-kejati-gold">
+                                    <svg aria-hidden="true" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                    </svg>
+                                </span>
+                                <div>
+                                    <h4 class="font-bold text-slate-900">Referensi</h4>
+                                    <p class="mt-1 text-sm leading-6 text-slate-600">Temukan literatur hukum dan pengetahuan pendukung untuk pekerjaan atau penelitian.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </article>
+
+                    <article class="landing-digital-panel">
+                        <div>
+                        <div class="flex items-center justify-between gap-4">
+                            <span class="rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-kejati-gold">
+                                Daring
+                            </span>
+                            <svg aria-hidden="true" class="h-7 w-7 text-kejati-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 6.75h15m-15 5.25h15m-15 5.25h9" />
+                            </svg>
+                        </div>
+                        <h3 class="mt-5 font-display text-3xl leading-tight text-white">Repositori digital</h3>
+                        <p class="mt-4 text-sm leading-7 text-emerald-100">
+                            Akses data koleksi secara daring untuk melihat judul, penulis, ketersediaan, dan lokasi rak.
+                        </p>
+
+                        </div>
+                        <div class="landing-digital-access">
+                        <p class="border-l-2 border-kejati-gold pl-4 text-sm leading-6 text-emerald-100">
+                            Isi buku tamu terlebih dahulu untuk melanjutkan ke katalog.
+                        </p>
+
+                        <a href="{{ route('kunjungan') }}"
+                            class="mt-8 inline-flex min-h-11 items-center gap-2 rounded-xl bg-kejati-gold px-5 py-3 text-sm font-bold text-kejati-dark transition hover:bg-yellow-200">
+                            Isi buku tamu
+                            <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                            </svg>
+                        </a>
+                        </div>
+                    </article>
                 </div>
             </div>
         </section>
 
-        <!-- Ringkasan Profil Perpustakaan -->
-        <section id="tentang" class="py-16 bg-white border-t scroll-mt-16 border-stone-200/80 lg:py-24">
-            <div class="px-5 mx-auto max-w-7xl lg:px-8">
-                <div class="grid gap-12 lg:grid-cols-12 lg:items-center">
-
-                    <!-- Kolom Kiri: Teks Ringkasan -->
-                    <div class="space-y-6 lg:col-span-7">
-                        <div
-                            class="inline-flex items-center gap-2.5 rounded-full border border-emerald-100 bg-emerald-50 px-3.5 py-1.5 text-xs font-semibold text-kejati">
-                            <span class="w-2 h-2 rounded-full bg-kejati-gold"></span>
-                            Sekilas Perpustakaan
-                        </div>
-
-                        <h2
-                            class="text-2xl font-bold leading-tight tracking-tight text-kejati-dark sm:text-3xl lg:text-4xl">
-                            Pusat Pengetahuan & Referensi Hukum Kejaksaan Tinggi Jawa Barat
-                        </h2>
-
-                        <p class="leading-relaxed text-slate-600 sm:text-base">
+        <section id="tentang" class="landing-about scroll-mt-24 border-t border-stone-200 py-16 sm:py-20 lg:py-28">
+            <div class="mx-auto grid max-w-7xl gap-12 px-5 lg:grid-cols-[0.92fr_1.08fr] lg:gap-20 lg:px-8">
+                <div class="lg:sticky lg:top-28 lg:self-start">
+                    <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Sekilas perpustakaan</p>
+                    <h2 class="mt-4 font-display text-4xl leading-tight tracking-tight text-kejati-dark sm:text-5xl">
+                        Pusat pengetahuan dan referensi hukum Kejaksaan Tinggi Jawa Barat.
+                    </h2>
+                    <div class="mt-7 space-y-5 text-base leading-7 text-slate-600">
+                        <p>
                             Perpustakaan Kejaksaan Tinggi Jawa Barat didirikan sebagai fasilitas utama dalam mendukung
                             tugas dan fungsi penegakan hukum melalui penyediaan literatur hukum yang mutakhir, lengkap,
                             dan terpercaya.
                         </p>
-
-                        <p class="leading-relaxed text-slate-600 sm:text-base">
+                        <p>
                             Kami melayani Jaksa, ASN Kejaksaan, praktisi hukum, akademisi, serta masyarakat umum yang
                             memerlukan akses informasi perundang-undangan, yurisprudensi, dokumen hukum khusus, hingga
                             koleksi literatur umum.
                         </p>
+                    </div>
+                    <a href="#kontak"
+                        class="mt-8 inline-flex min-h-11 items-center gap-2 rounded-xl border border-kejati/25 bg-white px-5 py-3 text-sm font-bold text-kejati transition hover:border-kejati hover:bg-emerald-50">
+                        Selengkapnya
+                        <svg aria-hidden="true" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.25">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m-6-6 6 6-6 6" />
+                        </svg>
+                    </a>
+                </div>
 
-                        <!-- Highlight Poin Utama -->
-                        <div class="grid gap-4 pt-2 sm:grid-cols-2">
-                            <div
-                                class="flex items-start gap-3 p-4 transition border rounded-xl border-stone-100 bg-stone-50/80 hover:bg-emerald-50/40">
-                                <div
-                                    class="flex items-center justify-center rounded-lg h-9 w-9 shrink-0 bg-kejati text-kejati-gold">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold text-slate-900">Koleksi Hukum Terpadu</h4>
-                                    <p class="mt-0.5 text-xs text-slate-500">Kitab undang-undang, naskah akademik, dan
-                                        karya hukum nasional.</p>
-                                </div>
-                            </div>
-
-                            <div
-                                class="flex items-start gap-3 p-4 transition border rounded-xl border-stone-100 bg-stone-50/80 hover:bg-emerald-50/40">
-                                <div
-                                    class="flex items-center justify-center rounded-lg h-9 w-9 shrink-0 bg-kejati text-kejati-gold">
-                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h4 class="text-sm font-bold text-slate-900">Sistem Terintegrasi</h4>
-                                    <p class="mt-0.5 text-xs text-slate-500">Pencatatan kunjungan digital dan
-                                        katalogisasi teratur.</p>
-                                </div>
-                            </div>
+                <div class="landing-reference-sheet">
+                    <div class="grid grid-cols-[auto_1fr] border-b border-stone-200 bg-kejati-dark text-white">
+                        <div class="flex w-16 items-center justify-center border-r border-white/10 bg-kejati-gold text-kejati-dark sm:w-20">
+                            <svg aria-hidden="true" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5h15m-13.5-3v-9l6-3 6 3v9m-9-6h.008v.008H9V10.5zm0 3h.008v.008H9V13.5zm3-3h.008v.008H12V10.5zm0 3h.008v.008H12V13.5zm3-3h.008v.008H15V10.5zm0 3h.008v.008H15V13.5z" />
+                            </svg>
                         </div>
-
-                        <!-- Tombol Selengkapnya -->
-                        <div class="pt-2">
-                            <a href="#"
-                                class="inline-flex items-center gap-2 px-5 py-3 text-sm font-bold text-white transition duration-200 shadow-md rounded-xl bg-kejati hover:bg-kejati-dark hover:shadow-lg">
-                                <span>Selengkapnya</span>
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                                </svg>
-                            </a>
+                        <div class="px-6 py-6 sm:px-8">
+                            <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-kejati-gold">Mengapa perpustakaan?</p>
+                            <h3 class="mt-1 text-xl font-bold">Referensi yang membantu langkah Anda lebih pasti.</h3>
                         </div>
                     </div>
 
-                    <!-- Kolom Kanan: Card Visual Motto Pelayanan -->
-                    <div class="lg:col-span-5">
-                        <div
-                            class="relative p-8 overflow-hidden text-white border shadow-xl rounded-3xl border-kejati-gold/30 bg-gradient-to-br from-kejati-dark to-kejati shadow-kejati-dark/10">
-                            <div class="absolute w-40 h-40 rounded-full -right-12 -top-12 bg-kejati-gold/10 blur-2xl">
-                            </div>
-
-                            <div class="relative z-10 space-y-6">
-                                <div class="flex items-center justify-between">
-                                    <span
-                                        class="px-3 py-1 text-xs font-semibold tracking-wider uppercase border rounded-lg border-white/10 bg-white/10 text-kejati-gold">
-                                        Motto Pelayanan
-                                    </span>
-                                    <span class="text-2xl text-kejati-gold">✦</span>
-                                </div>
-
-                                <blockquote class="text-lg font-semibold leading-relaxed text-white/95 sm:text-xl">
-                                    "Mewujudkan pelayanan referensi hukum yang profesional, akuntabel, dan berintegritas
-                                    untuk mendukung penegakan hukum berkeadilan."
-                                </blockquote>
-
-                                <div class="pt-5 text-xs border-t border-white/15 text-slate-300">
-                                    <p class="font-medium text-white">Kejaksaan Tinggi Jawa Barat</p>
-                                    <p class="text-slate-400">Jl. L. R. E. Martadinata No. 54, Bandung</p>
-                                </div>
-                            </div>
+                    <dl class="divide-y divide-stone-200">
+                        <div class="grid gap-3 px-6 py-6 sm:grid-cols-[9rem_1fr] sm:px-8">
+                            <dt class="text-sm font-bold text-kejati">Koleksi terkurasi</dt>
+                            <dd>
+                                <p class="text-sm leading-6 text-slate-600">Referensi hukum, perundangan, dan pengetahuan umum untuk mendukung pekerjaan dan penelitian.</p>
+                            </dd>
                         </div>
-                    </div>
+                        <div class="grid gap-3 px-6 py-6 sm:grid-cols-[9rem_1fr] sm:px-8">
+                            <dt class="text-sm font-bold text-kejati">Akses yang jelas</dt>
+                            <dd>
+                                <p class="text-sm leading-6 text-slate-600">Cari judul, penulis, dan ketersediaan buku sebelum Anda datang ke rak.</p>
+                            </dd>
+                        </div>
+                        <div class="grid gap-3 px-6 py-6 sm:grid-cols-[9rem_1fr] sm:px-8">
+                            <dt class="text-sm font-bold text-kejati">Layanan tertib</dt>
+                            <dd>
+                                <p class="text-sm leading-6 text-slate-600">Setiap kunjungan dan sirkulasi buku tercatat untuk menjaga layanan tetap akuntabel.</p>
+                            </dd>
+                        </div>
+                    </dl>
 
+                    <div class="m-4 flex gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 sm:m-6">
+                        <svg aria-hidden="true" class="mt-0.5 h-5 w-5 shrink-0 text-kejati" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        <p class="text-sm leading-6 text-slate-700">
+                            <strong class="font-bold text-slate-900">Datang dan bertanya.</strong> Peminjaman dilakukan langsung melalui petugas di lokasi perpustakaan.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <section class="bg-amber-100">
+        <section class="landing-closing">
             <div
                 class="flex flex-col gap-6 px-5 mx-auto max-w-7xl py-14 sm:flex-row sm:items-center sm:justify-between lg:px-8">
                 <div>
                     <p class="text-xs font-bold uppercase tracking-[0.2em] text-kejati-gold-dark">Siap mencari
                         referensi?</p>
-                    <h2 class="mt-2 text-2xl font-semibold text-kejati-dark">Mulai dari katalog kami.</h2>
+                    <h2 class="mt-3 font-display text-3xl text-kejati-dark sm:text-4xl">Mulai dengan mengisi buku tamu.</h2>
+                    <p class="mt-3 text-sm leading-6 text-slate-600">Setelah mengisi buku tamu, Anda dapat menelusuri katalog koleksi perpustakaan.</p>
                 </div>
                 <a href="{{ route('kunjungan') }}"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-kejati px-5 py-3.5 text-sm font-bold text-white transition hover:bg-kejati-dark">
+                    class="landing-primary-link shrink-0">
                     Isi buku tamu <span>→</span>
                 </a>
             </div>

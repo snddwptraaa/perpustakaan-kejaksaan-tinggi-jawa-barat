@@ -9,6 +9,7 @@ use App\Services\AuditLogger;
 use App\Services\CirculationService;
 use App\Services\XlsxReportWriter;
 use App\Support\Csv;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
@@ -180,7 +181,13 @@ class LoanManager extends Component
 
     public function cancel(int $id): void
     {
-        $cancelled = app(CirculationService::class)->cancel(Loan::findOrFail($id), (int) auth()->id());
+        try {
+            $cancelled = app(CirculationService::class)->cancel(Loan::findOrFail($id), (int) auth()->id());
+        } catch (ValidationException $exception) {
+            $this->mergeValidationErrors($exception);
+
+            return;
+        }
 
         session()->flash(
             $cancelled ? 'success' : 'error',
@@ -194,12 +201,11 @@ class LoanManager extends Component
     {
         try {
             app(CirculationService::class)->return(Loan::findOrFail($id), (int) auth()->id());
-        } catch (\RuntimeException $exception) {
-            session()->flash('error', $exception->getMessage());
+        } catch (ValidationException $exception) {
+            $this->mergeValidationErrors($exception);
 
             return;
         }
-
         session()->flash('success', 'Pengembalian buku berhasil dicatat.');
     }
 
@@ -208,8 +214,20 @@ class LoanManager extends Component
         try {
             app(CirculationService::class)->extend(Loan::findOrFail($id), (int) auth()->id());
             session()->flash('success', 'Peminjaman berhasil diperpanjang tujuh hari.');
-        } catch (\RuntimeException $exception) {
-            session()->flash('error', $exception->getMessage());
+        } catch (ValidationException $exception) {
+            $this->mergeValidationErrors($exception);
+        }
+    }
+
+    /**
+     * Salin pesan ValidationException ke error bag komponen.
+     */
+    private function mergeValidationErrors(ValidationException $exception): void
+    {
+        foreach ($exception->errors() as $field => $messages) {
+            foreach ($messages as $message) {
+                $this->addError($field, $message);
+            }
         }
     }
 
@@ -233,10 +251,22 @@ class LoanManager extends Component
 
     public function exportCsv(): StreamedResponse
     {
-        $filename = 'laporan-peminjaman-'.now()->format('Y-m-d_H-i-s').'.csv';
+        abort_unless(auth()->user()?->isAdmin(), 403);
 
-        return response()->streamDownload(function (): void {
+        [$from, $to, $suffix, $label] = $this->periodInfo();
+        $statusLabel = $this->statusLabel();
+        $filename = 'laporan-peminjaman'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.csv';
+        $printedAt = now()->format('Y-m-d H:i:s');
+        $printedBy = auth()->user()?->name ?? 'Sistem';
+
+        return response()->streamDownload(function () use ($label, $statusLabel, $printedAt, $printedBy): void {
             $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Laporan Peminjaman']);
+            fputcsv($handle, ['Periode', $label]);
+            fputcsv($handle, ['Status', $statusLabel]);
+            fputcsv($handle, ['Dicetak pada', $printedAt]);
+            fputcsv($handle, ['Dicetak oleh', $printedBy]);
+            fputcsv($handle, []);
             fputcsv($handle, ['Nama Peminjam', 'NIP', 'Instansi / Unit', 'Judul Buku', 'Tanggal Pinjam', 'Jatuh Tempo', 'Tanggal Kembali', 'Status', 'Petugas', 'Catatan']);
 
             $this->filteredLoansQuery()
@@ -267,8 +297,10 @@ class LoanManager extends Component
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
+        [$from, $to, $suffix, $label] = $this->periodInfo();
+
         return app(XlsxReportWriter::class)->download(
-            'laporan-peminjaman-'.now()->format('Y-m-d_H-i-s').'.xlsx',
+            'laporan-peminjaman'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.xlsx',
             ['Nama Peminjam', 'NIP', 'Instansi / Unit', 'Judul Buku', 'Tanggal Pinjam', 'Jatuh Tempo', 'Tanggal Kembali', 'Status', 'Petugas', 'Catatan'],
             function (callable $appendRow): void {
                 $this->filteredLoansQuery()->with(['book', 'petugas'])->latest()->chunkById(500, function ($loans) use ($appendRow): void {
@@ -281,7 +313,14 @@ class LoanManager extends Component
                         ]);
                     }
                 });
-            }
+            },
+            title: 'Laporan Peminjaman',
+            meta: [
+                'Periode' => $label,
+                'Status' => $this->statusLabel(),
+                'Dicetak pada' => now()->format('Y-m-d H:i:s'),
+                'Dicetak oleh' => auth()->user()?->name ?? 'Sistem',
+            ],
         );
     }
 
@@ -346,7 +385,7 @@ class LoanManager extends Component
 
     public function render()
     {
-        $loans = $this->filteredLoansQuery()->with(['book', 'petugas', 'member'])->latest()->paginate(10);
+        $loans = $this->filteredLoansQuery()->with(['book', 'petugas', 'member'])->latest()->paginate(15);
         $selectedBook = $this->book_id ? Book::with('category')->find($this->book_id) : null;
 
         $search = trim($this->bookSearch);
@@ -377,32 +416,58 @@ class LoanManager extends Component
     {
         abort_unless(auth()->user()?->isAdmin(), 403);
 
-        $from = $this->startDate ?: null;
-        $to = $this->endDate ?: null;
-
-        $suffix = '';
-        if ($from && $to) {
-            $suffix = "-{$from}-sd-{$to}";
-        } elseif ($from) {
-            $suffix = "-sejak-{$from}";
-        } elseif ($to) {
-            $suffix = "-sampai-{$to}";
-        }
-
+        [$from, $to, $suffix] = $this->periodInfo();
         $filename = 'laporan-peminjaman'.$suffix.'-'.now()->format('Y-m-d_H-i-s').'.pdf';
 
         $loans = $this->filteredLoansQuery()->with(['book', 'member'])->orderByDesc('tanggal_pinjam')->get();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.loans-pdf', [
+        $pdf = Pdf::loadView('reports.loans-pdf', [
             'loans' => $loans,
             'from' => $from,
             'to' => $to,
             'statusFilter' => $this->statusFilter ?: 'semua',
         ])
-        ->setPaper('a4', 'landscape');
+            ->setPaper('a4', 'landscape');
 
         return response()->streamDownload(function () use ($pdf): void {
             echo $pdf->output();
         }, $filename, ['Content-Type' => 'application/pdf']);
+    }
+
+    /**
+     * Kembalikan [$from, $to, $suffix, $label] dari filter periode aktif.
+     *
+     * @return array{?string, ?string, string, string}
+     */
+    private function periodInfo(): array
+    {
+        $from = $this->startDate ?: null;
+        $to = $this->endDate ?: null;
+
+        if ($from && $to && $from === $to) {
+            return [$from, $to, "-{$from}", "Tanggal {$from}"];
+        }
+        if ($from && $to) {
+            return [$from, $to, "-{$from}-sd-{$to}", "{$from} s/d {$to}"];
+        }
+        if ($from) {
+            return [$from, $to, "-sejak-{$from}", "Sejak {$from}"];
+        }
+        if ($to) {
+            return [$from, $to, "-sampai-{$to}", "Sampai {$to}"];
+        }
+
+        return [null, null, '', 'Semua periode'];
+    }
+
+    private function statusLabel(): string
+    {
+        return match ($this->statusFilter) {
+            'dipinjam' => 'Sedang Dipinjam',
+            'terlambat' => 'Terlambat Kembali',
+            'dikembalikan' => 'Sudah Dikembalikan',
+            'dibatalkan' => 'Dibatalkan',
+            default => 'Semua Status',
+        };
     }
 }

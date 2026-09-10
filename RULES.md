@@ -55,7 +55,7 @@
 
 - **R-23**: Form kunjungan wajib: kategori, nama, instansi/unit kerja, keperluan, dan persetujuan privasi. NIP wajib untuk kategori `pegawai`, sedangkan NIP tamu umum dan kontak bersifat opsional.
 - **R-24**: Form buku (admin) wajib: judul, penulis, kategori, stok. Field lain opsional.
-- **R-25**: ISBN bersifat opsional dan saat ini hanya dibatasi maksimal 50 karakter. Validasi/checksum ISBN-10/ISBN-13 belum diimplementasikan.
+- **R-25**: ISBN bersifat opsional. Input boleh memakai dash/spasi; sistem menormalkan dan memvalidasi checksum ISBN-10/ISBN-13 sebelum menyimpan (`App\Support\Isbn`). Data yang sudah tersimpan sebelum fitur ini aktif tidak dimigrasikan ulang — normalisasi berlaku untuk penulisan baru via form admin.
 - **R-26**: Tanggal jatuh tempo tidak boleh lebih awal dari tanggal pinjam (validasi form peminjaman).
 
 ## 7. Prioritas Implementasi (untuk timeline magang)

@@ -18,6 +18,7 @@ class AuditLogViewerTest extends TestCase
     use RefreshDatabase;
 
     private User $superadmin;
+
     private User $admin;
 
     protected function setUp(): void

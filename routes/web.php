@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ExportPdfController;
 use App\Livewire\Admin\AuditLogViewer;
 use App\Livewire\Admin\BookManager;
 use App\Livewire\Admin\CategoryManager;
@@ -7,12 +8,12 @@ use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Admin\LoanManager;
 use App\Livewire\Admin\MemberHistory;
 use App\Livewire\Admin\MemberManager;
-use App\Http\Controllers\ExportPdfController;
 use App\Livewire\Admin\UserManager;
 use App\Livewire\Admin\VisitorReport;
 use App\Livewire\Guest\BookDetail;
 use App\Livewire\Guest\CatalogBrowser;
 use App\Livewire\Guest\VisitorForm;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +35,11 @@ Route::middleware('auth')->group(function (): void {
     Route::view('/profile', 'profile')->name('profile');
 });
 Route::get('/kunjungan', VisitorForm::class)->name('kunjungan');
+Route::match(['get', 'post'], '/kunjungan/selesai', function (Request $request) {
+    $request->session()->forget(['visitor_checked_in', 'visitor_id', 'visitor_checked_in_at']);
+
+    return redirect()->route('kunjungan')->with('status', 'Sesi kunjungan selesai. Formulir siap untuk pengunjung berikutnya.');
+})->name('kunjungan.selesai');
 Route::get('/katalog', CatalogBrowser::class)->middleware('visitor.checked')->name('katalog');
 Route::get('/katalog/{book}', BookDetail::class)->middleware('visitor.checked')->name('buku.detail');
 

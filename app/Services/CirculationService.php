@@ -8,7 +8,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 
 class CirculationService
 {
@@ -25,6 +24,7 @@ class CirculationService
             $loan = Loan::create([...$data, 'petugas_id' => $petugasId, 'denda' => 0, 'denda_dibayar' => 0]);
             $book->decrement('stok_tersedia');
             Cache::forget('books:options');
+            Cache::forget('admin:dashboard-stats');
             $this->auditLogger->model('pinjam', $loan, null, $loan->fresh()->toArray(), [
                 'judul_buku' => $book->judul,
                 'nama_peminjam' => $loan->nama_peminjam,
@@ -39,7 +39,7 @@ class CirculationService
         return DB::transaction(function () use ($loan, $petugasId): Loan {
             $lockedLoan = Loan::query()->whereKey($loan->id)->lockForUpdate()->firstOrFail();
             if ($lockedLoan->tanggal_dibatalkan) {
-                throw new RuntimeException('Peminjaman yang dibatalkan tidak dapat dikembalikan.');
+                throw ValidationException::withMessages(['loan' => 'Peminjaman yang dibatalkan tidak dapat dikembalikan.']);
             }
             if ($lockedLoan->tanggal_kembali) {
                 return $lockedLoan;
@@ -47,13 +47,14 @@ class CirculationService
 
             $book = Book::query()->whereKey($lockedLoan->book_id)->lockForUpdate()->first();
             if (! $book || $book->stok_tersedia >= $book->stok) {
-                throw new RuntimeException('Stok buku tidak konsisten. Periksa inventaris sebelum pengembalian.');
+                throw ValidationException::withMessages(['loan' => 'Stok buku tidak konsisten. Periksa inventaris sebelum pengembalian.']);
             }
 
             $before = $lockedLoan->toArray();
             $lockedLoan->update(['tanggal_kembali' => today()]);
             $book->increment('stok_tersedia');
             Cache::forget('books:options');
+            Cache::forget('admin:dashboard-stats');
             $this->auditLogger->model('kembali', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), [
                 'petugas_id' => $petugasId,
                 'judul_buku' => $book->judul,
@@ -81,6 +82,7 @@ class CirculationService
             $lockedLoan->update(['tanggal_dibatalkan' => now(), 'petugas_pembatal_id' => $petugasId]);
             $book->increment('stok_tersedia');
             Cache::forget('books:options');
+            Cache::forget('admin:dashboard-stats');
             $this->auditLogger->model('batal', $lockedLoan, $before, $lockedLoan->fresh()->toArray(), [
                 'petugas_id' => $petugasId,
                 'judul_buku' => $book->judul,
@@ -96,7 +98,7 @@ class CirculationService
         return DB::transaction(function () use ($loan, $petugasId): Loan {
             $lockedLoan = Loan::query()->whereKey($loan->id)->lockForUpdate()->firstOrFail();
             if ($lockedLoan->tanggal_kembali || $lockedLoan->tanggal_dibatalkan || $lockedLoan->jumlah_perpanjangan >= 1) {
-                throw new RuntimeException('Peminjaman ini tidak dapat diperpanjang lagi.');
+                throw ValidationException::withMessages(['loan' => 'Peminjaman ini tidak dapat diperpanjang lagi.']);
             }
 
             $before = $lockedLoan->toArray();

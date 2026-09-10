@@ -4,10 +4,12 @@ namespace Tests\Feature\Admin;
 
 use App\Livewire\Admin\BookManager;
 use App\Livewire\Admin\LoanManager;
+use App\Livewire\Admin\MemberManager;
 use App\Livewire\Admin\VisitorReport;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Loan;
+use App\Models\Member;
 use App\Models\User;
 use App\Models\Visitor;
 use Carbon\Carbon;
@@ -133,6 +135,50 @@ class ReportExportTest extends TestCase
 
         $response = $component->call('exportPdf');
         $response->assertFileDownloaded('katalog-buku-'.now()->format('Y-m-d_H-i-s').'.pdf');
+        Carbon::setTestNow();
+    }
+
+    public function test_book_manager_can_export_filtered_csv_and_excel(): void
+    {
+        Carbon::setTestNow('2026-09-10 09:30:00');
+        $user = User::factory()->create(['role' => 'admin']);
+        $category = Category::create(['nama_kategori' => 'Hukum Administrasi']);
+        Book::create([
+            'category_id' => $category->id,
+            'judul' => 'Hukum Tata Usaha Negara',
+            'penulis' => 'Indroharto',
+            'stok' => 2,
+            'stok_tersedia' => 1,
+        ]);
+
+        $component = Livewire::actingAs($user)
+            ->test(BookManager::class)
+            ->set('search', 'Tata Usaha');
+
+        $component->call('exportCsv')->assertFileDownloaded('koleksi-buku-2026-09-10_09-30-00.csv');
+        $component->call('exportXlsx')->assertFileDownloaded('koleksi-buku-2026-09-10_09-30-00.xlsx');
+        Carbon::setTestNow();
+    }
+
+    public function test_member_manager_can_export_pdf_csv_and_excel(): void
+    {
+        Carbon::setTestNow('2026-09-10 10:15:00');
+        $user = User::factory()->create(['role' => 'admin']);
+        Member::create([
+            'nama' => 'Siti Rahmawati',
+            'nip' => '198801012010012001',
+            'instansi_unit' => 'Bidang Pembinaan',
+            'no_hp' => '081200000001',
+            'aktif' => true,
+        ]);
+
+        $component = Livewire::actingAs($user)
+            ->test(MemberManager::class)
+            ->set('search', 'Pembinaan');
+
+        $component->call('exportPdf')->assertFileDownloaded('daftar-anggota-2026-09-10_10-15-00.pdf');
+        $component->call('exportCsv')->assertFileDownloaded('daftar-anggota-2026-09-10_10-15-00.csv');
+        $component->call('exportXlsx')->assertFileDownloaded('daftar-anggota-2026-09-10_10-15-00.xlsx');
         Carbon::setTestNow();
     }
 

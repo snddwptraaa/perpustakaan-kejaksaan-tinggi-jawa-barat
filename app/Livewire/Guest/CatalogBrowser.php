@@ -4,6 +4,7 @@ namespace App\Livewire\Guest;
 
 use App\Models\Book;
 use App\Models\Category;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -32,6 +33,12 @@ class CatalogBrowser extends Component
         $this->resetPage();
     }
 
+    public function resetFilters(): void
+    {
+        $this->reset('search', 'category', 'availability');
+        $this->resetPage();
+    }
+
     public function render()
     {
         $books = Book::active()
@@ -45,7 +52,7 @@ class CatalogBrowser extends Component
 
         return view('livewire.guest.catalog-browser', [
             'books' => $books,
-            'categories' => Category::query()->orderBy('nama_kategori')->get(),
+            'categories' => Cache::remember('categories:options', now()->addMinutes(5), fn () => Category::query()->orderBy('nama_kategori')->get()),
         ])->layout('layouts.guest', ['title' => 'Katalog Buku']);
     }
 }

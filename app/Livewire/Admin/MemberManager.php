@@ -4,9 +4,15 @@ namespace App\Livewire\Admin;
 
 use App\Models\Member;
 use App\Services\AuditLogger;
+use App\Services\XlsxReportWriter;
+use App\Support\Csv;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberManager extends Component
 {
@@ -110,10 +116,84 @@ class MemberManager extends Component
         $this->resetValidation();
     }
 
+    public function exportPdf(): StreamedResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        $members = $this->filteredMembersQuery()->get();
+        $pdf = Pdf::loadView('reports.members-pdf', ['members' => $members])
+            ->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf): void {
+            echo $pdf->output();
+        }, 'daftar-anggota-'.now()->format('Y-m-d_H-i-s').'.pdf', ['Content-Type' => 'application/pdf']);
+    }
+
+    public function exportCsv(): StreamedResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        return response()->streamDownload(function (): void {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['Nama', 'NIP', 'Instansi / Unit', 'No. HP', 'Status', 'Jumlah Peminjaman', 'Terdaftar']);
+
+            foreach ($this->filteredMembersQuery()->lazy(500) as $member) {
+                fputcsv($handle, array_map([Csv::class, 'safeCell'], [
+                    $member->nama,
+                    $member->nip ?? '',
+                    $member->instansi_unit ?? '',
+                    $member->no_hp ?? '',
+                    $member->aktif ? 'Aktif' : 'Nonaktif',
+                    $member->loans_count,
+                    $member->created_at?->format('Y-m-d H:i:s') ?? '',
+                ]));
+            }
+
+            fclose($handle);
+        }, 'daftar-anggota-'.now()->format('Y-m-d_H-i-s').'.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function exportXlsx(): BinaryFileResponse
+    {
+        abort_unless(auth()->user()?->isAdmin(), 403);
+
+        return app(XlsxReportWriter::class)->download(
+            'daftar-anggota-'.now()->format('Y-m-d_H-i-s').'.xlsx',
+            ['Nama', 'NIP', 'Instansi / Unit', 'No. HP', 'Status', 'Jumlah Peminjaman', 'Terdaftar'],
+            function (callable $appendRow): void {
+                foreach ($this->filteredMembersQuery()->lazy(500) as $member) {
+                    $appendRow([
+                        $member->nama,
+                        $member->nip ?? '',
+                        $member->instansi_unit ?? '',
+                        $member->no_hp ?? '',
+                        $member->aktif ? 'Aktif' : 'Nonaktif',
+                        $member->loans_count,
+                        $member->created_at?->format('Y-m-d H:i:s') ?? '',
+                    ]);
+                }
+            },
+            title: 'Daftar Anggota Perpustakaan',
+            meta: [
+                'Dicetak pada' => now()->format('Y-m-d H:i:s'),
+                'Dicetak oleh' => auth()->user()?->name ?? 'Sistem',
+            ],
+        );
+    }
+
     public function render()
     {
         return view('livewire.admin.member-manager', [
-            'members' => Member::search($this->search)->latest()->paginate(10),
+            'members' => $this->filteredMembersQuery()->paginate(15),
         ])->layout('layouts.admin', ['title' => 'Anggota']);
+    }
+
+    private function filteredMembersQuery(): Builder
+    {
+        return Member::query()
+            ->search($this->search)
+            ->withCount('loans')
+            ->latest();
     }
 }

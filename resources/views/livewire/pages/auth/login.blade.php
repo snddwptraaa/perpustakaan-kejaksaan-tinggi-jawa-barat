@@ -29,15 +29,9 @@ new #[Layout('layouts.guest')] class extends Component {
         <!-- Login Card -->
         <div class="overflow-hidden rounded-2xl border border-stone-200/80 bg-white shadow-xl shadow-kejati-dark/5">
 
-            <!-- Card Header with Logo -->
-            <div class="bg-gradient-to-br from-kejati-dark to-kejati px-8 pb-8 pt-10 text-center">
-                <div
-                    class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-lg backdrop-blur">
-                    <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan"
-                        class="h-10 w-auto object-contain drop-shadow">
-                </div>
-                <h1 class="text-xl font-bold text-white">Sistem Informasi Perpustakaan</h1>
-                <p class="mt-1 text-sm text-white/70">Perpustakaan Digital Kejati Jawa Barat</p>
+            <div class="bg-gradient-to-br from-kejati-dark to-kejati px-8 py-8 text-center">
+                <h1 class="text-xl font-bold text-white">Masuk petugas</h1>
+                <p class="mt-1 text-sm text-white/70">Kelola koleksi, sirkulasi, dan kunjungan.</p>
             </div>
 
             <!-- Card Body: Form -->
@@ -49,20 +43,20 @@ new #[Layout('layouts.guest')] class extends Component {
                     <!-- Email Address -->
                     <div>
                         <label for="email" class="block text-sm font-semibold text-slate-700">Email</label>
-                        <input wire:model="form.email" id="email" type="email" name="email" required autofocus
-                            autocomplete="username" placeholder="contoh@perpustakaan.kejati-jabar.go.id"
+                        <input wire:model="form.email" id="email" aria-describedby="email-error" aria-invalid="{{ $errors->has('form.email') ? 'true' : 'false' }}" type="email" name="email" required autofocus
+                            autocomplete="username" placeholder="Alamat email akun petugas"
                             class="mt-1.5 block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati" />
-                        <x-input-error :messages="$errors->get('form.email')" class="mt-1.5" />
+                        <x-input-error id="email-error" :messages="$errors->get('form.email')" class="mt-1.5" />
                     </div>
 
                     <!-- Password -->
                     <div>
-                        <label for="password" class="block text-sm font-semibold text-slate-700">Kata Sandi
-                            (Password)</label>
-                        <input wire:model="form.password" id="password" type="password" name="password" required
-                            autocomplete="current-password" placeholder="••••••••"
-                            class="mt-1.5 block w-full rounded-xl border-stone-300 bg-stone-50/50 px-4 py-2.5 text-sm shadow-sm transition focus:border-kejati focus:bg-white focus:ring-kejati" />
-                        <x-input-error :messages="$errors->get('form.password')" class="mt-1.5" />
+                        <label for="password" class="block text-sm font-semibold text-slate-700">Kata sandi</label>
+                        <div x-data="{ reveal: false }" class="relative mt-1.5">
+                            <input wire:model="form.password" id="password" :type="reveal ? 'text' : 'password'" type="password" name="password" required autocomplete="current-password" placeholder="Masukkan kata sandi" class="field-control py-3 pr-24" aria-describedby="password-error" aria-invalid="{{ $errors->has('form.password') ? 'true' : 'false' }}">
+                            <button type="button" @click="reveal = !reveal" :aria-pressed="reveal" aria-controls="password" class="absolute inset-y-0 right-0 px-3 text-xs font-semibold text-kejati" x-text="reveal ? 'Sembunyikan' : 'Tampilkan'">Tampilkan</button>
+                        </div>
+                        <x-input-error id="password-error" :messages="$errors->get('form.password')" class="mt-1.5" />
                     </div>
 
                     <!-- Remember Me & Forgot -->
@@ -77,7 +71,7 @@ new #[Layout('layouts.guest')] class extends Component {
                         @if (Route::has('password.request'))
                             <a class="text-xs font-medium text-kejati transition hover:text-kejati-dark hover:underline"
                                 href="{{ route('password.request') }}" wire:navigate>
-                                Lupa password?
+                                Lupa kata sandi?
                             </a>
                         @endif
                     </div>
@@ -108,16 +102,5 @@ new #[Layout('layouts.guest')] class extends Component {
             </div>
         </div>
 
-        <!-- Back to Home link -->
-        <p class="mt-6 text-center text-sm text-slate-500">
-            <a href="{{ route('home') }}"
-                class="inline-flex items-center gap-1.5 font-medium text-kejati transition hover:text-kejati-dark hover:underline"
-                wire:navigate>
-                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
-                </svg>
-                Kembali ke Beranda
-            </a>
-        </p>
     </div>
 </div>

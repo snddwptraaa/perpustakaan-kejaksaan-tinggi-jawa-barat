@@ -4,9 +4,11 @@ namespace App\Livewire\Admin;
 
 use App\Models\Category;
 use App\Services\AuditLogger;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -20,7 +22,11 @@ class CategoryManager extends Component
 
     public string $nama_kategori = '';
 
+    #[Url(except: '')]
     public string $search = '';
+
+    #[Url(except: 'name_asc')]
+    public string $sort = 'name_asc';
 
     protected function rules(): array
     {
@@ -42,6 +48,18 @@ class CategoryManager extends Component
 
     public function updatedSearch(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedSort(): void
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->sort = 'name_asc';
         $this->resetPage();
     }
 
@@ -87,6 +105,7 @@ class CategoryManager extends Component
             session()->flash('success', 'Kategori buku baru berhasil ditambahkan.');
         }
 
+        Cache::forget('categories:options');
         $this->resetForm();
     }
 
@@ -103,6 +122,7 @@ class CategoryManager extends Component
         $before = $category->toArray();
         $category->delete();
         app(AuditLogger::class)->model('hapus', $category, $before, null);
+        Cache::forget('categories:options');
         session()->flash('success', 'Kategori berhasil dihapus.');
     }
 
@@ -114,11 +134,18 @@ class CategoryManager extends Component
 
     public function render()
     {
+        $categories = Category::query()
+            ->withCount('books')
+            ->when($this->search !== '', fn ($query) => $query->where('nama_kategori', 'like', "%{$this->search}%"));
+
+        match ($this->sort) {
+            'name_desc' => $categories->orderByDesc('nama_kategori'),
+            'books_desc' => $categories->orderByDesc('books_count')->orderBy('nama_kategori'),
+            default => $categories->orderBy('nama_kategori'),
+        };
+
         return view('livewire.admin.category-manager', [
-            'categories' => Category::withCount('books')
-                ->when($this->search, fn ($q) => $q->where('nama_kategori', 'like', "%{$this->search}%"))
-                ->orderBy('nama_kategori')
-                ->paginate(10),
+            'categories' => $categories->paginate(15),
         ])->layout('layouts.admin', ['title' => 'Kategori Buku']);
     }
 }

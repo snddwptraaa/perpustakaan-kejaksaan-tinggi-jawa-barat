@@ -6,7 +6,7 @@ Aplikasi buku tamu, katalog, inventaris buku, dan pencatatan peminjaman berbasis
 
 ## Persyaratan
 
-- PHP 8.2 atau lebih baru dengan ekstensi `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `mbstring`, `openssl`, `pdo`, `pdo_mysql`, `session`, dan `tokenizer`
+- PHP 8.4 dengan ekstensi `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `iconv`, `mbstring`, `openssl`, `pdo`, `pdo_mysql`, `session`, `tokenizer`, `xmlreader`, dan `zip`
 - Ekstensi `pdo_sqlite` untuk test otomatis
 - Composer 2
 - Node.js 20 atau lebih baru dan npm
@@ -56,7 +56,9 @@ npm audit
 ## Production
 
 - Gunakan `APP_ENV=production`, `APP_DEBUG=false`, URL HTTPS, `SESSION_SECURE_COOKIE=true`, dan `SESSION_ENCRYPT=true`.
+- Mulai dari `.env.production.example`, simpan sebagai `.env` dengan permission `0600`, lalu isi key dan kredensial melalui secret manager/server—jangan commit file tersebut.
 - Jalankan `php artisan migrate --force`, `php artisan storage:link`, `npm ci && npm run build`, lalu `php artisan optimize` saat deployment.
+- Jalankan `php artisan production:check`; hentikan deployment bila satu saja pemeriksaan gagal.
 - Arahkan document root web server ke direktori `public/`.
 - Jalankan queue worker dengan process supervisor bila queue selain `sync` digunakan.
 - Cadangkan database dan `storage/app/public` secara berkala.
@@ -66,12 +68,14 @@ npm audit
 ### Checklist rilis
 
 - Pastikan seluruh `php artisan test` lulus pada CI dengan ekstensi `pdo_sqlite`.
+- Pastikan job MySQL di CI juga lulus; job tersebut menjalankan migrasi, test suite, dan `production:check` pada MySQL 8.4.
 - Siapkan `.env` production: `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://...`, `APP_TIMEZONE=Asia/Jakarta`, `APP_LOCALE=id`, `LOG_LEVEL=warning`, SMTP aktif, serta cookie secure/encrypted.
 - Jalankan `composer install --no-dev --optimize-autoloader`, `npm ci && npm run build`, `php artisan migrate --force`, `php artisan storage:link`, dan `php artisan optimize`.
 - Konfigurasikan web server agar hanya direktori `public/` yang dapat diakses dan tambahkan security headers/HSTS pada koneksi HTTPS.
 - Jika `QUEUE_CONNECTION` bukan `sync`, jalankan worker dengan Supervisor/systemd dan monitor `failed_jobs`.
 - Aktifkan backup database serta `storage/app/public`, lakukan uji restore, dan monitor endpoint `/up` (liveness) serta `/ready` (database/storage).
 - Tetapkan durasi retensi yang disetujui pada `VISITOR_RETENTION_DAYS`; nilai `0` menonaktifkan scheduled deletion.
+- Bila pemilik data secara resmi menerima retensi tanpa batas, set `VISITOR_INDEFINITE_RETENTION_ACCEPTED=true`; jangan aktifkan tanpa keputusan tertulis.
 - Buat release commit/tag dan prosedur rollback sebelum migrasi production.
 
 ### Keterbatasan saat ini

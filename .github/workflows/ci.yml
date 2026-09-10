@@ -16,7 +16,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: pdo_sqlite
+          extensions: iconv, pdo_mysql, pdo_sqlite, zip
           coverage: none
       - uses: actions/setup-node@v4
         with:
@@ -27,5 +27,62 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: vendor/bin/pint --test
       - run: composer audit --locked
+      - run: composer check-platform-reqs --no-dev
+      - run: composer install --dry-run --no-dev --classmap-authoritative --no-interaction
+      - run: npm audit --audit-level=moderate
       - run: php artisan test
       - run: npm run build
+
+  mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: perpustakaan_test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --host=127.0.0.1 --user=root --password=root"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: perpustakaan_test
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: iconv, pdo_mysql, zip
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan migrate:fresh --force
+      - name: Verify production configuration and infrastructure
+        run: php artisan production:check
+        env:
+          APP_ENV: production
+          APP_DEBUG: false
+          APP_URL: https://perpustakaan.example.go.id
+          APP_LOCALE: id
+          APP_TIMEZONE: Asia/Jakarta
+          SESSION_ENCRYPT: true
+          SESSION_SECURE_COOKIE: true
+          MAIL_MAILER: smtp
+          MAIL_HOST: smtp.example.test
+          MAIL_FROM_ADDRESS: perpustakaan@example.test
+          LOG_LEVEL: warning
+          VISITOR_RETENTION_DAYS: 365
+          SEED_DEMO_DATA: false
+      - name: Run test suite against MySQL
+        run: php artisan test
+        env:
+          APP_ENV: testing

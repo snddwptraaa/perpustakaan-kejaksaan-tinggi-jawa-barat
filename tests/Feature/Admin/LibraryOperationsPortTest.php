@@ -14,6 +14,7 @@ use App\Services\AuditLogger;
 use App\Services\CirculationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -78,7 +79,7 @@ class LibraryOperationsPortTest extends TestCase
         $extended = app(CirculationService::class)->extend($loan, $this->admin->id);
         $this->assertSame(today()->addDays(7)->toDateString(), $extended->tanggal_jatuh_tempo->toDateString());
         $this->assertSame(1, $extended->jumlah_perpanjangan);
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(ValidationException::class);
         app(CirculationService::class)->extend($extended, $this->admin->id);
     }
 
