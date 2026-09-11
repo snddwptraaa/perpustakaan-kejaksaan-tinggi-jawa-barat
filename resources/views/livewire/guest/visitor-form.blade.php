@@ -12,7 +12,7 @@
                             <p class="mt-2 text-sm leading-6 text-slate-600">Isi data kunjungan hari ini untuk membuka katalog buku.</p>
                         </div>
                         <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-kejati/10 text-kejati">
-                            <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan" class="h-8 w-auto object-contain">
+                            <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan" width="32" height="36" class="h-8 w-auto object-contain">
                         </div>
                     </div>
 

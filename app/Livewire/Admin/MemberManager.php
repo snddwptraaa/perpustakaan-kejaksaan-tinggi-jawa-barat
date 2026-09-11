@@ -9,6 +9,7 @@ use App\Support\Csv;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -38,7 +39,12 @@ class MemberManager extends Component
     {
         return [
             'nama' => ['required', 'string', 'max:255'],
-            'nip' => ['nullable', 'string', 'max:30'],
+            'nip' => [
+                'nullable',
+                'string',
+                'max:30',
+                Rule::unique('members', 'nip')->ignore($this->editingId),
+            ],
             'instansi_unit' => ['nullable', 'string', 'max:255'],
             'no_hp' => ['nullable', 'string', 'max:20'],
             'aktif' => ['boolean'],
@@ -69,6 +75,7 @@ class MemberManager extends Component
 
     public function save(): void
     {
+        $this->nip = trim($this->nip);
         $data = $this->validate();
         foreach (['nip', 'instansi_unit', 'no_hp'] as $field) {
             $data[$field] = blank($data[$field]) ? null : trim($data[$field]);

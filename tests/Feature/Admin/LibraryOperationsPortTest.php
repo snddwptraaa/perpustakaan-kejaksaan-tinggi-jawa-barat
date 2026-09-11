@@ -12,6 +12,7 @@ use App\Models\Member;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\CirculationService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -63,6 +64,34 @@ class LibraryOperationsPortTest extends TestCase
 
         $this->assertDatabaseHas('loans', ['member_id' => $member->id, 'nama_peminjam' => 'Budi Anggota']);
         $this->assertDatabaseHas('audit_logs', ['aksi' => 'pinjam', 'entitas' => 'loans']);
+    }
+
+    public function test_member_nip_is_trimmed_and_must_be_unique(): void
+    {
+        Livewire::actingAs($this->admin)->test(MemberManager::class)
+            ->call('create')
+            ->set('nama', 'Anggota Pertama')
+            ->set('nip', ' 12345 ')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        Livewire::actingAs($this->admin)->test(MemberManager::class)
+            ->call('create')
+            ->set('nama', 'Anggota Kedua')
+            ->set('nip', '12345')
+            ->call('save')
+            ->assertHasErrors(['nip' => 'unique']);
+
+        $this->assertSame(1, Member::query()->where('nip', '12345')->count());
+    }
+
+    public function test_database_rejects_duplicate_member_nip(): void
+    {
+        Member::create(['nama' => 'Anggota Pertama', 'nip' => '998877']);
+
+        $this->expectException(QueryException::class);
+
+        Member::create(['nama' => 'Anggota Kedua', 'nip' => '998877']);
     }
 
     public function test_loan_can_only_be_extended_once_and_uses_today_for_overdue_loan(): void

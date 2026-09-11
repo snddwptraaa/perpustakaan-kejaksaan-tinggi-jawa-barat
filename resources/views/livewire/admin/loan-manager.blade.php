@@ -117,7 +117,7 @@
                                     <div class="flex items-center gap-4">
                                         <div class="h-16 w-12 shrink-0 overflow-hidden rounded-lg bg-emerald-900 flex items-center justify-center text-white shadow-inner">
                                             @if ($selectedBook->cover_image)
-                                                <img src="{{ Storage::url($selectedBook->cover_image) }}" alt="Cover" class="h-full w-full object-cover">
+                                                <img src="{{ Storage::url($selectedBook->cover_image) }}" alt="Sampul {{ $selectedBook->judul }}" width="48" height="64" class="h-full w-full object-cover">
                                             @else
                                                 <span class="text-lg font-bold text-kejati-gold">▤</span>
                                             @endif
@@ -189,7 +189,7 @@
                                                 <div class="flex items-center gap-3 min-w-0">
                                                     <div class="h-10 w-8 shrink-0 overflow-hidden rounded bg-stone-100 border border-stone-200 flex items-center justify-center">
                                                         @if ($buku->cover_image)
-                                                            <img src="{{ Storage::url($buku->cover_image) }}" alt="Cover" class="h-full w-full object-cover">
+                                                            <img src="{{ Storage::url($buku->cover_image) }}" alt="Sampul {{ $buku->judul }}" width="40" height="48" class="h-full w-full object-cover">
                                                         @else
                                                             <span class="text-xs text-slate-400">▤</span>
                                                         @endif

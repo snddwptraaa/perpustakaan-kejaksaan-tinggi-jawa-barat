@@ -133,6 +133,7 @@
                                         @if ($book->cover_image)
                                             <img src="{{ Storage::url($book->cover_image) }}"
                                                 alt="{{ $book->judul }}"
+                                                width="40" height="56"
                                                 class="h-full w-full object-cover">
                                         @else
                                             <div class="flex h-full w-full flex-col items-center justify-center bg-emerald-950/10 text-emerald-800">
@@ -262,7 +263,7 @@
 
     <!-- MODAL POPUP FORM TAMBAH / EDIT BUKU -->
     @if ($showForm)
-        <div x-data x-trap.inert.noscroll="true" @keydown.escape.stop="$wire.resetForm()" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div x-data x-trap.noscroll="true" @keydown.escape.stop="$wire.resetForm()" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <!-- Background Backdrop with Blur -->
             <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
                 wire:click="resetForm"></div>
@@ -487,9 +488,21 @@
                             <div class="rounded-2xl border border-stone-200 bg-stone-50/60 p-4">
                                 <div class="mb-3 flex items-center justify-between">
                                     <h4 class="text-sm font-bold text-slate-900">Sampul buku <span class="font-normal text-slate-500">(opsional)</span></h4>
-                                    @if ($cover || $existingCover)
+                                    @if ($cover)
                                         <button type="button"
-                                            wire:click="{{ $cover ? 'removeCoverPreview' : 'removeExistingCover' }}"
+                                            wire:click="removeCoverPreview"
+                                            class="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline">
+                                            Hapus Pratinjau
+                                        </button>
+                                    @elseif ($existingCover)
+                                        <button type="button"
+                                            @click="$dispatch('open-confirm-modal', {
+                                                title: 'Hapus Sampul Buku',
+                                                message: 'Hapus sampul buku ini secara permanen?',
+                                                confirmButtonText: 'Ya, Hapus Sampul',
+                                                type: 'danger',
+                                                onConfirm: () => $wire.removeExistingCover()
+                                            })"
                                             class="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:underline">
                                             Hapus Sampul
                                         </button>
@@ -499,9 +512,9 @@
                                 <div class="flex flex-col items-center gap-5 sm:flex-row">
                                     <div class="relative flex h-24 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-stone-300 bg-white shadow-inner">
                                         @if ($cover)
-                                            <img src="{{ $cover->temporaryUrl() }}" alt="Pratinjau sampul" class="h-full w-full object-cover">
+                                            <img src="{{ $cover->temporaryUrl() }}" alt="Pratinjau sampul" width="80" height="96" class="h-full w-full object-cover">
                                         @elseif ($existingCover)
-                                            <img src="{{ Storage::url($existingCover) }}" alt="Sampul buku saat ini" class="h-full w-full object-cover">
+                                            <img src="{{ Storage::url($existingCover) }}" alt="Sampul buku saat ini" width="80" height="96" class="h-full w-full object-cover">
                                         @else
                                             <div class="p-3 text-center text-slate-500">
                                                 <svg class="mx-auto h-8 w-8 text-stone-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Livewire\Admin\BookManager;
+use App\Models\AuditLog;
 use App\Models\Book;
 use App\Models\Category;
 use App\Models\Loan;
@@ -151,6 +152,61 @@ class BookManagerTest extends TestCase
         $this->assertNotNull($book);
         $this->assertNotNull($book->cover_image);
         Storage::disk('public')->assertExists($book->cover_image);
+    }
+
+    public function test_removing_existing_cover_deletes_file_and_writes_audit_log(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('covers/existing.jpg', 'image');
+        $book = Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Buku Bersampul',
+            'penulis' => 'Penulis',
+            'stok' => 1,
+            'stok_tersedia' => 1,
+            'cover_image' => 'covers/existing.jpg',
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('edit', $book->id)
+            ->call('removeExistingCover')
+            ->assertSet('existingCover', null);
+
+        Storage::disk('public')->assertMissing('covers/existing.jpg');
+        $this->assertNull($book->fresh()->cover_image);
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $this->admin->id,
+            'aksi' => 'ubah',
+            'entitas' => 'books',
+            'entitas_id' => $book->id,
+        ]);
+        $this->assertSame('hapus_sampul', AuditLog::latest('id')->firstOrFail()->metadata['perubahan']);
+    }
+
+    public function test_book_with_active_loan_cannot_be_archived(): void
+    {
+        $book = Book::create([
+            'category_id' => $this->category->id,
+            'judul' => 'Buku Dipinjam',
+            'penulis' => 'Penulis',
+            'stok' => 1,
+            'stok_tersedia' => 0,
+        ]);
+        Loan::create([
+            'book_id' => $book->id,
+            'petugas_id' => $this->admin->id,
+            'nama_peminjam' => 'Peminjam',
+            'tanggal_pinjam' => today(),
+            'tanggal_jatuh_tempo' => today()->addDays(7),
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(BookManager::class)
+            ->call('toggleArchive', $book->id)
+            ->assertSee('tidak dapat diarsipkan');
+
+        $this->assertNull($book->fresh()->archived_at);
     }
 
     public function test_admin_can_edit_book_data(): void

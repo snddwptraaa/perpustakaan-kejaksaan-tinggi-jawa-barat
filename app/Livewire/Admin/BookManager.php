@@ -261,13 +261,32 @@ class BookManager extends Component
 
     public function removeExistingCover(): void
     {
-        if ($this->editingId && $this->existingCover) {
-            $coverToDelete = $this->existingCover;
-            Book::findOrFail($this->editingId)->update(['cover_image' => null]);
-            Storage::disk('public')->delete($coverToDelete);
-            $this->existingCover = null;
-            session()->flash('success', 'Sampul buku berhasil dihapus.');
+        if (! $this->editingId || ! $this->existingCover) {
+            return;
         }
+
+        $coverToDelete = DB::transaction(function (): ?string {
+            $book = Book::query()->whereKey($this->editingId)->lockForUpdate()->firstOrFail();
+            if (! $book->cover_image) {
+                return null;
+            }
+
+            $before = $book->toArray();
+            $cover = $book->cover_image;
+            $book->update(['cover_image' => null]);
+            app(AuditLogger::class)->model('ubah', $book, $before, $book->fresh()->toArray(), [
+                'perubahan' => 'hapus_sampul',
+            ]);
+
+            return $cover;
+        });
+
+        if ($coverToDelete) {
+            Storage::disk('public')->delete($coverToDelete);
+        }
+
+        $this->existingCover = null;
+        session()->flash('success', 'Sampul buku berhasil dihapus.');
     }
 
     public function save(): void
@@ -338,18 +357,27 @@ class BookManager extends Component
 
     public function toggleArchive(int $id): void
     {
-        $book = Book::findOrFail($id);
-        if (! $book->archived_at && $book->loans()->active()->exists()) {
+        $archived = DB::transaction(function () use ($id): ?bool {
+            $book = Book::query()->whereKey($id)->lockForUpdate()->firstOrFail();
+            if (! $book->archived_at && $book->loans()->active()->exists()) {
+                return null;
+            }
+
+            $before = $book->toArray();
+            $book->update(['archived_at' => $book->archived_at ? null : now()]);
+            app(AuditLogger::class)->model($book->archived_at ? 'arsipkan' : 'pulihkan', $book, $before, $book->fresh()->toArray());
+
+            return (bool) $book->archived_at;
+        });
+
+        if ($archived === null) {
             session()->flash('error', 'Buku dengan peminjaman aktif tidak dapat diarsipkan.');
 
             return;
         }
 
-        $before = $book->toArray();
-        $book->update(['archived_at' => $book->archived_at ? null : now()]);
-        app(AuditLogger::class)->model($book->archived_at ? 'arsipkan' : 'pulihkan', $book, $before, $book->fresh()->toArray());
         Cache::forget('books:options');
-        session()->flash('success', $book->archived_at ? 'Buku diarsipkan dari katalog publik.' : 'Buku dikembalikan ke katalog publik.');
+        session()->flash('success', $archived ? 'Buku diarsipkan dari katalog publik.' : 'Buku dikembalikan ke katalog publik.');
     }
 
     public function delete(int $id): void

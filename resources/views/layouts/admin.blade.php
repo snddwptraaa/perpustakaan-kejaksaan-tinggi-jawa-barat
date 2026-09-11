@@ -46,7 +46,7 @@
             <div class="pointer-events-none absolute -right-24 top-24 h-64 w-64 rounded-full border border-white/5"></div>
             <div class="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-kejati/30 blur-3xl"></div>
             <div class="relative flex min-h-20 items-center gap-3 border-b border-white/10 px-6">
-                <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan Tinggi Jawa Barat"
+                <img src="{{ asset('images/logo.svg') }}" alt="Logo Kejaksaan Tinggi Jawa Barat" width="32" height="36"
                     class="h-9 w-8 shrink-0 object-contain">
                 <div>
                     <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-kejati-gold">Panel Admin</p>
@@ -97,7 +97,7 @@
             <div class="relative border-t border-white/10 p-4">
                 <a href="{{ route('profile') }}" class="mb-3 block rounded-xl bg-white/5 px-4 py-3 transition hover:bg-white/10" wire:navigate>
                     <p class="truncate text-sm font-semibold">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-white/70">{{ ucfirst(auth()->user()->role) }} · Pengaturan akun</p>
+                    <p class="text-xs text-white/80">{{ ucfirst(auth()->user()->role) }} · Pengaturan akun</p>
                 </a>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button
                         class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"><span

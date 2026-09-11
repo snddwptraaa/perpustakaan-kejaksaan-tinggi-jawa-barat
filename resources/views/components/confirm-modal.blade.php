@@ -76,7 +76,7 @@ aria-modal="true">
 
                 <div class="flex-1 min-w-0">
                     <h3 class="text-lg font-bold text-slate-900 leading-snug" id="modal-confirm-title" x-text="title"></h3>
-                    <p class="mt-2 text-sm leading-6 text-slate-500" id="modal-confirm-description" x-text="message"></p>
+                    <p class="mt-2 text-sm leading-6 text-slate-600" id="modal-confirm-description" x-text="message"></p>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@ aria-modal="true">
                 </button>
                 <button type="button"
                     @click="confirm"
-                    :class="type === 'danger' ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' : 'bg-kejati hover:bg-kejati-dark shadow-kejati/20'"
+                    :class="type === 'danger' ? 'bg-rose-700 hover:bg-rose-800 shadow-rose-700/20' : 'bg-kejati hover:bg-kejati-dark shadow-kejati/20'"
                     class="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white shadow-lg transition focus-visible:ring-2 focus-visible:ring-kejati focus-visible:ring-offset-2"
                     x-text="confirmButtonText">
                 </button>

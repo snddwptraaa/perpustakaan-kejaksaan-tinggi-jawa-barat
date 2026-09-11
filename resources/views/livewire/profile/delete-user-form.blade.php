@@ -45,14 +45,15 @@ new class extends Component {
     <x-danger-button x-data=""
         x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">Hapus akun</x-danger-button>
 
-    <x-modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable>
+    <x-modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" title-id="confirm-user-deletion-title"
+        description-id="confirm-user-deletion-description" focusable>
         <form wire:submit="deleteUser" class="p-6">
 
-            <h2 class="text-lg font-medium text-gray-900">
+            <h2 id="confirm-user-deletion-title" class="text-lg font-medium text-gray-900">
                 Hapus akun Anda?
             </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
+            <p id="confirm-user-deletion-description" class="mt-1 text-sm text-gray-600">
                 Semua data akun akan dihapus permanen. Masukkan kata sandi untuk mengonfirmasi.
             </p>
 
