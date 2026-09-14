@@ -7,6 +7,7 @@
     <title>Perpustakaan Kejati Jawa Barat</title>
     <meta name="description"
         content="Perpustakaan Kejaksaan Tinggi Jawa Barat — ruang referensi hukum dan pengetahuan.">
+    <x-favicon />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>

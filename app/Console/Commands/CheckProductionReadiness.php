@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Throwable;
 
 class CheckProductionReadiness extends Command
@@ -21,6 +22,11 @@ class CheckProductionReadiness extends Command
         $mailDriver = (string) config('mail.default');
         $mailHost = (string) config("mail.mailers.{$mailDriver}.host");
         $mailFrom = (string) config('mail.from.address');
+        $expectedLivewireAsset = config('app.debug')
+            ? 'livewire/livewire.js'
+            : 'livewire/livewire.min.js';
+        $hasExpectedLivewireAssetRoute = collect(Route::getRoutes()->getRoutes())
+            ->contains(fn ($route): bool => $route->uri() === $expectedLivewireAsset);
 
         $checks = [
             $this->check('Environment', app()->environment('production'), 'APP_ENV harus production.'),
@@ -47,6 +53,11 @@ class CheckProductionReadiness extends Command
             ),
             $this->check('Database driver', in_array($databaseDriver, ['mysql', 'mariadb'], true), 'DB_CONNECTION production harus mysql atau mariadb.'),
             $this->check('Storage permissions', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')), 'storage dan bootstrap/cache harus writable.'),
+            $this->check(
+                'Livewire asset route',
+                $hasExpectedLivewireAssetRoute,
+                "Route {$expectedLivewireAsset} tidak tersedia. Jalankan php artisan optimize:clear lalu php artisan optimize dengan environment production."
+            ),
         ];
 
         try {

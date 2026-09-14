@@ -6,6 +6,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ $title ?? 'Perpustakaan Kejati Jawa Barat' }}</title>
         <meta name="description" content="Katalog dan layanan kunjungan Perpustakaan Kejaksaan Tinggi Jawa Barat.">
+        <x-favicon />
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>

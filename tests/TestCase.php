@@ -20,5 +20,9 @@ abstract class TestCase extends BaseTestCase
         }
 
         parent::setUp();
+
+        // Feature tests must not depend on a Vite manifest left behind by a
+        // developer workstation. The frontend build has its own CI gate.
+        $this->withoutVite();
     }
 }
