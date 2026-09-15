@@ -8,13 +8,15 @@
 - Cron and a process supervisor when asynchronous queues are enabled
 - Node.js is only required during build, not at runtime
 
+For native Windows Server deployment with IIS and Task Scheduler, follow `WINDOWS_DEPLOYMENT.md`. The commands below use Linux terminology where the operating system differs.
+
 ## Release checklist
 
 1. Back up the database and `storage/app/public` outside the web root; test a restore periodically.
 2. Run `composer audit --locked`, `npm audit`, and `composer check-platform-reqs --no-dev`, then install with `composer install --no-dev --classmap-authoritative` and `npm ci && npm run build`.
 3. Copy `.env.production.example` to `.env` with permission `0600`. Configure the application key, HTTPS URL, database, SMTP, cache, session, and approved visitor-retention policy using server-side secrets.
 4. Run `php artisan migrate --force` and `php artisan storage:link`.
-5. Run `php artisan optimize` and ensure `storage` plus `bootstrap/cache` are writable by the PHP user.
+5. Run `php artisan optimize:clear` followed by `php artisan optimize` using the final production environment. This prevents a development route cache from serving the wrong Livewire asset URL. Ensure `storage` plus `bootstrap/cache` are writable by the PHP user.
 6. Configure cron: `* * * * * php /path/to/artisan schedule:run`.
 7. Point the web server document root to `public/`; never expose the repository root or `.env`.
 8. Run `php artisan production:check`. A failed check is a deployment blocker.

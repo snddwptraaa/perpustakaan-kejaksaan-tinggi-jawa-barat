@@ -12,6 +12,9 @@ class PublicShellTest extends TestCase
 
         $response->assertOk()
             ->assertSee('public-header', false)
+            ->assertSee('rel="icon"', false)
+            ->assertSee('images/logo.svg', false)
+            ->assertSee('apple-touch-icon.png', false)
             ->assertSee(route('home').'#hero', false)
             ->assertSee(route('home').'#layanan', false)
             ->assertSee(route('home').'#tentang', false)

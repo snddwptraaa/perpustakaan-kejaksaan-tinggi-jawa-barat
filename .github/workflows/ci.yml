@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           extensions: iconv, pdo_mysql, pdo_sqlite, zip
           coverage: none
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -30,8 +30,8 @@ jobs:
       - run: composer check-platform-reqs --no-dev
       - run: composer install --dry-run --no-dev --classmap-authoritative --no-interaction
       - run: npm audit --audit-level=moderate
-      - run: php artisan test
       - run: npm run build
+      - run: php artisan test
 
   mysql:
     runs-on: ubuntu-latest
@@ -57,7 +57,7 @@ jobs:
       DB_USERNAME: root
       DB_PASSWORD: root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -86,3 +86,29 @@ jobs:
         run: php artisan test
         env:
           APP_ENV: testing
+
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: fileinfo, iconv, pdo_mysql, pdo_sqlite, zip
+          coverage: none
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist --no-scripts
+      - run: npm ci
+      - name: Prepare test environment
+        shell: pwsh
+        run: |
+          Copy-Item .env.example .env
+          php artisan key:generate
+          php artisan package:discover --ansi
+      - run: composer check-platform-reqs --no-dev
+      - run: npm run build
+      - run: php artisan test --compact

@@ -12,6 +12,16 @@ class ProductionOperationsTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_iis_front_controller_configuration_is_present(): void
+    {
+        $configuration = file_get_contents(public_path('web.config'));
+
+        $this->assertIsString($configuration);
+        $this->assertStringContainsString('<rewrite>', $configuration);
+        $this->assertStringContainsString('url="index.php"', $configuration);
+        $this->assertStringContainsString('existingResponse="PassThrough"', $configuration);
+    }
+
     public function test_https_responses_include_security_headers(): void
     {
         $response = $this
